@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="appTitle">Инспектор Больничных Систем</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .rating-btn-group .selected { background-color: #4f46e5; color: white; }
+        .rating-btn-group .selected.rating-1 { background-color: #ef4444; }
+        .rating-btn-group .selected.rating-2 { background-color: #f97316; }
+        .rating-btn-group .selected.rating-3 { background-color: #eab308; }
+        .rating-btn-group .selected.rating-4 { background-color: #22c55e; }
+        /* Анимация загрузки */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* RTL support */
+        [dir="rtl"] th, [dir="rtl"] td {
+            text-align: right;
+        }
+        [dir="rtl"] .file\:mr-4 {
+            margin-left: 1rem;
+            margin-right: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div id="loading-overlay" class="fixed inset-0 bg-white/80 z-50 flex-col items-center justify-center hidden">
+        <div class="loader"></div>
+        <p id="loadingText" data-lang-key="loadingText" class="mt-4 text-gray-600 font-medium">Загрузка данных...</p>
+    </div>
+
+    <div id="setupPage" class="page active p-4 md:p-8 max-w-lg mx-auto">
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <div class="text-center mb-6">
+                <i class="fas fa-hospital-user fa-3x text-indigo-500"></i>
+                <h1 data-lang-key="setupTitle" class="text-2xl font-bold text-gray-800 mt-2">Инспекция Систем</h1>
+                <p data-lang-key="setupSubtitle" class="text-gray-500">Начало новой проверки</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="inspectorName" data-lang-key="inspectorLabel" class="block text-sm font-medium text-gray-700">ФИО проверяющего</label>
+                    <input type="text" id="inspectorName" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="department" data-lang-key="departmentLabel" class="block text-sm font-medium text-gray-700">Отделение (впишите название)</label>
+                    <input type="text" id="department" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <button id="startInspectionBtn" data-lang-key="startInspectionBtn" class="w-full bg-indigo-600 text-white py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Начать инспекцию
+                </button>
+                <button id="viewReportsFromHomeBtn" data-lang-key="viewReportsBtn" class="w-full bg-gray-500 text-white py-2 px-4 mt-3 rounded-md shadow-sm text-base font-medium hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                    Посмотреть отчеты
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="inspectionPage" class="page p-4 md:p-8 max-w-4xl mx-auto">
+         <div class="bg-white p-6 rounded-xl shadow-md">
+            <div class="flex justify-between items-center mb-4 border-b pb-4">
+                <div>
+                    <h2 data-lang-key="roomCheckTitle" class="text-xl font-bold text-gray-800">Проверка комнаты</h2>
+                    <p class="text-sm text-gray-500">
+                        <span id="headerInspector"></span> - <span id="headerDepartment"></span>
+                    </p>
+                </div>
+                <button id="viewReportBtn" class="bg-green-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-green-600">
+                    <i class="fas fa-chart-line mr-2"></i><span data-lang-key="viewReportBtnShort">Смотреть отчет</span>
+                </button>
+            </div>
+            
+            <div id="roomSelectionBlock" class="mb-6">
+                <label for="roomName" data-lang-key="roomNameLabel" class="block text-sm font-medium text-gray-700">Введите номер/название комнаты</label>
+                <div class="mt-1 flex rounded-md shadow-sm">
+                    <input type="text" id="roomName" class="flex-1 block w-full min-w-0 rounded-none rounded-l-md px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" data-lang-key="roomNamePlaceholder">
+                    <button id="startRoomInspectionBtn" data-lang-key="startBtn" class="inline-flex items-center px-4 py-2 border border-l-0 border-indigo-600 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700">
+                        Начать
+                    </button>
+                </div>
+            </div>
+            
+            <div id="systemsCheckBlock" class="hidden">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4"><span data-lang-key="roomLabel">Комната:</span> <span id="currentRoomName" class="text-indigo-600"></span></h3>
+                <div id="systemsList" class="space-y-5">
+                    </div>
+                
+                <div class="mt-6 pt-4 border-t">
+                     <label for="customSystemName" data-lang-key="addCustomSystemLabel" class="block text-sm font-medium text-gray-700">Добавить нестандартную систему для проверки</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input type="text" id="customSystemName" data-lang-key="customSystemPlaceholder" class="flex-1 block w-full min-w-0 rounded-none rounded-l-md px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                        <button id="addCustomSystemBtn" data-lang-key="addBtn" class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-r-md">Добавить</button>
+                    </div>
+                </div>
+                
+                <div class="mt-8 flex justify-end">
+                    <button id="completeRoomBtn" data-lang-key="completeRoomBtn" class="bg-indigo-600 text-white py-3 px-6 rounded-md shadow-sm hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        Завершить проверку комнаты
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="reportPage" class="page p-4 md:p-8">
+        <div class="bg-white p-6 rounded-xl shadow-md max-w-7xl mx-auto">
+            <div class="flex justify-between items-center mb-4 border-b pb-4">
+                <div>
+                    <h1 data-lang-key="reportTitle" class="text-2xl font-bold text-gray-800">Отчет о неисправностях</h1>
+                    <p data-lang-key="reportSubtitle" class="text-gray-500">Системы с оценкой 1 или 2, требующие внимания.</p>
+                </div>
+                <div class="flex space-x-2">
+                     <button id="exportCsvBtn" class="bg-blue-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-600">
+                        <i class="fas fa-file-csv mr-2"></i><span data-lang-key="exportCsvBtn">Экспорт в CSV</span>
+                    </button>
+                    <button id="backToInspectionBtn" class="bg-gray-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-gray-600">
+                        <span data-lang-key="backToInspectionBtn">Назад к инспекции</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th data-lang-key="tableHDepartment" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Отделение</th>
+                            <th data-lang-key="tableHRoom" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Комната</th>
+                            <th data-lang-key="tableHSystem" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Система</th>
+                            <th data-lang-key="tableHRating" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Оценка</th>
+                            <th data-lang-key="tableHComment" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Комментарий</th>
+                            <th data-lang-key="tableHPhoto" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Фото</th>
+                            <th data-lang-key="tableHInspector" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Проверяющий</th>
+                            <th data-lang-key="tableHDate" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // --- ИМПОРТ МОДУЛЕЙ FIREBASE ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+        // --- КОНФИГУРАЦИЯ FIREBASE (ВАШИ ДАННЫЕ) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDTI7k9eI21wKVbsn8pm3cLf2XPWnZeITY",
+            authDomain: "hospital-inspector-app.firebaseapp.com",
+            projectId: "hospital-inspector-app",
+            storageBucket: "hospital-inspector-app.appspot.com",
+            messagingSenderId: "624165443618",
+            appId: "1:624165443618:web:2b766c45adf75b2f28527b",
+            measurementId: "G-QZPFMECY6L"
+        };
+        
+        // --- ИНИЦИАЛИЗАЦИЯ СЕРВИСОВ FIREBASE ---
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        // --- СЛОВАРЬ ПЕРЕВОДОВ ---
+        const translations = {
+            'ru': {
+                appTitle: "Инспектор Больничных Систем",
+                loadingText: "Загрузка данных...",
+                savingText: "Сохранение отчета...",
+                setupTitle: "Инспекция Систем",
+                setupSubtitle: "Начало новой проверки",
+                inspectorLabel: "ФИО проверяющего",
+                departmentLabel: "Отделение (впишите название)",
+                startInspectionBtn: "Начать инспекцию",
+                viewReportsBtn: "Посмотреть отчеты",
+                roomCheckTitle: "Проверка комнаты",
+                viewReportBtnShort: "Смотреть отчет",
+                roomNameLabel: "Введите номер/название комнаты",
+                roomNamePlaceholder: "Палата 101",
+                startBtn: "Начать",
+                roomLabel: "Комната:",
+                addCustomSystemLabel: "Добавить нестандартную систему для проверки",
+                customSystemPlaceholder: "Например, кондиционер",
+                addBtn: "Добавить",
+                completeRoomBtn: "Завершить проверку комнаты",
+                reportTitle: "Отчет о неисправностях",
+                reportSubtitle: "Системы с оценкой 1 или 2, требующие внимания.",
+                exportCsvBtn: "Экспорт в CSV",
+                backToInspectionBtn: "Назад к инспекции",
+                tableHDepartment: "Отделение",
+                tableHRoom: "Комната",
+                tableHSystem: "Система",
+                tableHRating: "Оценка",
+                tableHComment: "Комментарий",
+                tableHPhoto: "Фото",
+                tableHInspector: "Проверяющий",
+                tableHDate: "Дата",
+                alertEnterInspectorAndDepartment: "Пожалуйста, введите имя проверяющего и название отделения.",
+                alertEnterRoomName: "Пожалуйста, введите номер или название комнаты.",
+                alertRoomReportSaved: (room) => `Отчет по комнате "${room}" успешно сохранен!`,
+                alertRoomReportError: "Произошла ошибка при сохранении отчета. Пожалуйста, попробуйте еще раз.",
+                alertReportsLoadError: "Не удалось загрузить отчеты. Проверьте подключение и убедитесь, что в Firestore создан необходимый индекс.",
+                alertNoDataToExport: "Нет данных для экспорта.",
+                noIssuesFound: "Неисправностей не найдено.",
+                headerInspectorLabel: "Проверяющий:",
+                headerDepartmentLabel: "Отделение:",
+                commentPlaceholder: "Добавить комментарий (необязательно)",
+                chooseFileLabel: "Выберите фото",
+                standardSystems: ["Окна", "Двери", "Стены и потолок", "Кровати", "Электрооборудование", "Душ", "Туалет", "Краны", "Шкафы", "Тумбочки"]
+            },
+            'en': {
+                appTitle: "Hospital Systems Inspector",
+                loadingText: "Loading data...",
+                savingText: "Saving report...",
+                setupTitle: "Systems Inspection",
+                setupSubtitle: "Start a new check",
+                inspectorLabel: "Inspector's full name",
+                departmentLabel: "Department (enter name)",
+                startInspectionBtn: "Start Inspection",
+                viewReportsBtn: "View Reports",
+                roomCheckTitle: "Room Check",
+                viewReportBtnShort: "View Report",
+                roomNameLabel: "Enter room number/name",
+                roomNamePlaceholder: "Ward 101",
+                startBtn: "Start",
+                roomLabel: "Room:",
+                addCustomSystemLabel: "Add a non-standard system to check",
+                customSystemPlaceholder: "e.g., Air conditioner",
+                addBtn: "Add",
+                completeRoomBtn: "Complete Room Check",
+                reportTitle: "Malfunction Report",
+                reportSubtitle: "Systems with a rating of 1 or 2 that require attention.",
+                exportCsvBtn: "Export to CSV",
+                backToInspectionBtn: "Back to Inspection",
+                tableHDepartment: "Department",
+                tableHRoom: "Room",
+                tableHSystem: "System",
+                tableHRating: "Rating",
+                tableHComment: "Comment",
+                tableHPhoto: "Photo",
+                tableHInspector: "Inspector",
+                tableHDate: "Date",
+                alertEnterInspectorAndDepartment: "Please enter the inspector's name and department.",
+                alertEnterRoomName: "Please enter the room number or name.",
+                alertRoomReportSaved: (room) => `Report for room "${room}" has been saved successfully!`,
+                alertRoomReportError: "An error occurred while saving the report. Please try again.",
+                alertReportsLoadError: "Failed to load reports. Check your connection and ensure the required index is created in Firestore.",
+                alertNoDataToExport: "No data to export.",
+                noIssuesFound: "No issues found.",
+                headerInspectorLabel: "Inspector:",
+                headerDepartmentLabel: "Department:",
+                commentPlaceholder: "Add a comment (optional)",
+                chooseFileLabel: "Choose photo",
+                standardSystems: ["Windows", "Doors", "Walls and ceiling", "Beds", "Electrical equipment", "Shower", "Toilet", "Faucets", "Cabinets", "Bedside tables"]
+            },
+            'he': {
+                appTitle: "מפקח מערכות בית חולים",
+                loadingText: "טוען נתונים...",
+                savingText: "שומר דוח...",
+                setupTitle: "בדיקת מערכות",
+                setupSubtitle: "התחלת בדיקה חדשה",
+                inspectorLabel: "שם מלא של הבודק",
+                departmentLabel: "מחלקה (הזן שם)",
+                startInspectionBtn: "התחל בדיקה",
+                viewReportsBtn: "צפה בדוחות",
+                roomCheckTitle: "בדיקת חדר",
+                viewReportBtnShort: "צפה בדוח",
+                roomNameLabel: "הזן מספר/שם חדר",
+                roomNamePlaceholder: "חדר 101",
+                startBtn: "התחל",
+                roomLabel: "חדר:",
+                addCustomSystemLabel: "הוסף מערכת לא סטנדרטית לבדיקה",
+                customSystemPlaceholder: "לדוגמה, מזגן",
+                addBtn: "הוסף",
+                completeRoomBtn: "סיים בדיקת חדר",
+                reportTitle: "דוח תקלות",
+                reportSubtitle: "מערכות עם דירוג 1 או 2 הדורשות טיפול.",
+                exportCsvBtn: "יצא ל-CSV",
+                backToInspectionBtn: "חזור לבדיקה",
+                tableHDepartment: "מחלקה",
+                tableHRoom: "חדר",
+                tableHSystem: "מערכת",
+                tableHRating: "דירוג",
+                tableHComment: "הערה",
+                tableHPhoto: "תמונה",
+                tableHInspector: "בודק",
+                tableHDate: "תאריך",
+                alertEnterInspectorAndDepartment: "אנא הזן את שם הבודק והמחלקה.",
+                alertEnterRoomName: "אנא הזן את מספר או שם החדר.",
+                alertRoomReportSaved: (room) => `הדוח עבור חדר "${room}" נשמר בהצלחה!`,
+                alertRoomReportError: "אירעה שגיאה בשמירת הדוח. אנא נסה שוב.",
+                alertReportsLoadError: "טעינת הדוחות נכשלה. בדוק את החיבור וודא שהאינדקס הדרוש נוצר ב-Firestore.",
+                alertNoDataToExport: "אין נתונים לייצוא.",
+                noIssuesFound: "לא נמצאו תקלות.",
+                headerInspectorLabel: "בודק:",
+                headerDepartmentLabel: "מחלקה:",
+                commentPlaceholder: "הוסף הערה (אופציונלי)",
+                chooseFileLabel: "בחר תמונה",
+                standardSystems: ["חלונות", "דלתות", "קירות ותקרה", "מיטות", "ציוד חשמלי", "מקלחת", "שירותים", "ברזים", "ארונות", "שידות לילה"]
+            }
+        };
+        
+        // --- ОПРЕДЕЛЕНИЕ ЯЗЫКА И ПРИМЕНЕНИЕ ПЕРЕВОДОВ ---
+        const userLang = navigator.language.slice(0, 2) || 'en';
+        const lang = translations[userLang] ? userLang : 'en';
+        const T = translations[lang];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (lang === 'he') {
+                document.documentElement.setAttribute('dir', 'rtl');
+                document.documentElement.lang = 'he';
+            } else {
+                document.documentElement.lang = lang;
+            }
+            document.querySelectorAll('[data-lang-key]').forEach(elem => {
+                const key = elem.getAttribute('data-lang-key');
+                if (T[key]) {
+                    if (elem.placeholder !== undefined && !elem.dataset.value) {
+                        elem.placeholder = T[key];
+                    } else {
+                        elem.textContent = T[key];
+                    }
+                }
+            });
+        });
+
+        // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И СОСТОЯНИЕ ---
+        let state = {
+            inspector: '',
+            department: '',
+            currentRoom: '',
+            currentChecklist: new Map(),
+            allReports: []
+        };
+        const standardSystems = T.standardSystems;
+
+        // --- ЭЛЕМЕНТЫ DOM ---
+        const pages = {
+            setup: document.getElementById('setupPage'),
+            inspection: document.getElementById('inspectionPage'),
+            report: document.getElementById('reportPage'),
+            loading: document.getElementById('loading-overlay')
+        };
+        const loadingText = document.getElementById('loadingText');
+        const inspectorNameInput = document.getElementById('inspectorName');
+        const departmentInput = document.getElementById('department');
+        const startInspectionBtn = document.getElementById('startInspectionBtn');
+        const viewReportsFromHomeBtn = document.getElementById('viewReportsFromHomeBtn');
+        const roomNameInput = document.getElementById('roomName');
+        const startRoomInspectionBtn = document.getElementById('startRoomInspectionBtn');
+        const systemsCheckBlock = document.getElementById('systemsCheckBlock');
+        const roomSelectionBlock = document.getElementById('roomSelectionBlock');
+        const systemsList = document.getElementById('systemsList');
+        const currentRoomNameSpan = document.getElementById('currentRoomName');
+        const completeRoomBtn = document.getElementById('completeRoomBtn');
+        const viewReportBtn = document.getElementById('viewReportBtn');
+        const backToInspectionBtn = document.getElementById('backToInspectionBtn');
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const reportTableBody = document.getElementById('reportTableBody');
+        const customSystemNameInput = document.getElementById('customSystemName');
+        const addCustomSystemBtn = document.getElementById('addCustomSystemBtn');
+
+        // --- УПРАВЛЕНИЕ ЗАГРУЗКОЙ ---
+        function showLoader(text = T.loadingText) {
+            loadingText.textContent = text;
+            pages.loading.classList.remove('hidden');
+            pages.loading.classList.add('flex');
+        }
+        function hideLoader() {
+            pages.loading.classList.add('hidden');
+            pages.loading.classList.remove('flex');
+        }
+
+        // --- НАВИГАЦИЯ ---
+        function navigate(pageName) {
+            Object.values(pages).forEach(page => page.classList.remove('active'));
+            if (pages[pageName]) pages[pageName].classList.add('active');
+        }
+
+        // --- ОСНОВНАЯ ЛОГИКА ---
+        startInspectionBtn.addEventListener('click', () => {
+            const inspector = inspectorNameInput.value.trim();
+            const department = departmentInput.value.trim();
+            if (!inspector || !department) {
+                alert(T.alertEnterInspectorAndDepartment);
+                return;
+            }
+            state.inspector = inspector;
+            state.department = department;
+            document.getElementById('headerInspector').textContent = `${T.headerInspectorLabel} ${inspector}`;
+            document.getElementById('headerDepartment').textContent = `${T.headerDepartmentLabel} ${department}`;
+            navigate('inspection');
+        });
+
+        viewReportsFromHomeBtn.addEventListener('click', () => {
+            subscribeToReports();
+            navigate('report');
+        });
+
+        startRoomInspectionBtn.addEventListener('click', () => {
+            const room = roomNameInput.value.trim();
+            if (!room) {
+                alert(T.alertEnterRoomName);
+                return;
+            }
+            state.currentRoom = room;
+            currentRoomNameSpan.textContent = room;
+            renderSystemsList(standardSystems);
+            roomSelectionBlock.classList.add('hidden');
+            systemsCheckBlock.classList.remove('hidden');
+            roomNameInput.value = '';
+            checkIfRoomComplete();
+        });
+
+        function renderSystemsList(systems) {
+            systemsList.innerHTML = '';
+            state.currentChecklist.clear();
+            systems.forEach(system => {
+                state.currentChecklist.set(system, { rating: 0, comment: '', photo: null });
+                systemsList.appendChild(createSystemChecklistItem(system));
+            });
+            checkIfRoomComplete();
+        }
+
+        function createSystemChecklistItem(systemName) {
+            const div = document.createElement('div');
+            div.className = 'p-4 border rounded-lg bg-gray-50';
+            div.dataset.system = systemName;
+
+            div.innerHTML = `
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center">
+                    <h4 class="text-md font-semibold text-gray-800 mb-2 sm:mb-0">${systemName}</h4>
+                    <div class="flex-shrink-0 rating-btn-group flex space-x-1">
+                        ${[1,2,3,4].map(n => `<button data-rating="${n}" class="rating-btn rating-${n} w-10 h-10 rounded-full font-bold border transition-colors">${n}</button>`).join('')}
+                    </div>
+                </div>
+                <div class="mt-3 space-y-3">
+                    <textarea class="comment-input w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="${T.commentPlaceholder}"></textarea>
+                    <div class="flex items-center">
+                        <label class="block">
+                            <span class="sr-only">${T.chooseFileLabel}</span>
+                            <input type="file" accept="image/*" class="photo-input block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
+                        </label>
+                    </div>
+                </div>
+            `;
+            const ratingButtons = div.querySelectorAll('.rating-btn');
+            ratingButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    ratingButtons.forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    state.currentChecklist.get(systemName).rating = parseInt(btn.dataset.rating);
+                    checkIfRoomComplete();
+                });
+            });
+            div.querySelector('.comment-input').addEventListener('input', (e) => {
+                state.currentChecklist.get(systemName).comment = e.target.value;
+            });
+            div.querySelector('.photo-input').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                   state.currentChecklist.get(systemName).photo = e.target.files[0];
+                }
+            });
+            return div;
+        }
+
+        function checkIfRoomComplete() {
+            completeRoomBtn.disabled = ![...state.currentChecklist.values()].every(v => v.rating !== 0);
+        }
+
+        addCustomSystemBtn.addEventListener('click', () => {
+            const customName = customSystemNameInput.value.trim();
+            if (customName && !state.currentChecklist.has(customName)) {
+                state.currentChecklist.set(customName, { rating: 0, comment: '', photo: null });
+                systemsList.appendChild(createSystemChecklistItem(customName));
+                customSystemNameInput.value = '';
+                checkIfRoomComplete();
+            }
+        });
+
+        completeRoomBtn.addEventListener('click', async () => {
+            showLoader(T.savingText);
+            const promises = [];
+
+            for (let [system, data] of state.currentChecklist.entries()) {
+                let photoURL = '';
+                if (data.photo) {
+                    const storageRef = ref(storage, `inspections/${Date.now()}_${data.photo.name}`);
+                    try {
+                        const snapshot = await uploadBytes(storageRef, data.photo);
+                        photoURL = await getDownloadURL(snapshot.ref);
+                    } catch (error) {
+                        console.error("Ошибка при загрузке фото: ", error);
+                    }
+                }
+                
+                promises.push(addDoc(collection(db, "inspections"), {
+                    inspector: state.inspector,
+                    department: state.department,
+                    room: state.currentRoom,
+                    system: system,
+                    rating: data.rating,
+                    comment: data.comment,
+                    photoURL: photoURL,
+                    createdAt: serverTimestamp()
+                }));
+            }
+            
+            try {
+                await Promise.all(promises);
+                alert(T.alertRoomReportSaved(state.currentRoom));
+                state.currentRoom = '';
+                state.currentChecklist.clear();
+                systemsCheckBlock.classList.add('hidden');
+                roomSelectionBlock.classList.remove('hidden');
+            } catch (error) {
+                console.error("Ошибка при сохранении данных: ", error);
+                alert(T.alertRoomReportError);
+            } finally {
+                hideLoader();
+            }
+        });
+        
+        // --- ЛОГИКА ОТЧЕТА ---
+        let unsubscribe = null; 
+        function subscribeToReports() {
+            showLoader();
+
+            if (unsubscribe) {
+                unsubscribe();
+            }
+
+            const q = query(collection(db, "inspections"), where("rating", "in", [1, 2]), orderBy("createdAt", "desc"));
+            
+            unsubscribe = onSnapshot(q, (querySnapshot) => {
+                state.allReports = [];
+                querySnapshot.forEach((doc) => state.allReports.push({ id: doc.id, ...doc.data() }));
+                renderReportTable(state.allReports);
+                hideLoader();
+            }, (error) => {
+                console.error("Ошибка при получении отчетов: ", error);
+                alert(T.alertReportsLoadError);
+                hideLoader();
+            });
+        }
+        
+        function renderReportTable(reports) {
+            reportTableBody.innerHTML = '';
+            if (reports.length === 0) {
+                reportTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-gray-500">${T.noIssuesFound}</td></tr>`;
+                return;
+            }
+            reports.forEach(report => {
+                const tr = document.createElement('tr');
+                const ratingColor = report.rating === 1 ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800';
+                const date = report.createdAt ? report.createdAt.toDate().toLocaleString(lang) : 'N/A';
+                
+                const photoCell = report.photoURL 
+                    ? `<a href="${report.photoURL}" target="_blank" rel="noopener noreferrer"><img src="${report.photoURL}" alt="Inspection photo" class="h-12 w-12 object-cover rounded-md"></a>`
+                    : 'Нет фото';
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${report.department}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${report.room}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${report.system}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${ratingColor}">${report.rating}</span></td>
+                    <td class="px-6 py-4 text-sm text-gray-500" style="max-width: 200px; white-space: normal;">${report.comment}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${photoCell}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${report.inspector}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date}</td>
+                `;
+                reportTableBody.appendChild(tr);
+            });
+        }
+
+        exportCsvBtn.addEventListener('click', () => {
+            if (state.allReports.length === 0) {
+                alert(T.alertNoDataToExport);
+                return;
+            }
+            
+            const headers = [T.tableHDepartment, T.tableHRoom, T.tableHSystem, T.tableHRating, T.tableHComment, "Photo URL", T.tableHInspector, T.tableHDate];
+            
+            const rows = state.allReports.map(report => {
+                const date = report.createdAt ? report.createdAt.toDate().toLocaleString(lang) : 'N/A';
+                const sanitizedComment = `"${(report.comment || '').replace(/"/g, '""')}"`;
+                return [report.department, report.room, report.system, report.rating, sanitizedComment, report.photoURL || '', report.inspector, date].join(";");
+            });
+
+            // Формируем контент CSV, добавляя BOM (\uFEFF) в начало для корректного отображения в Excel
+            let csvContent = "\uFEFF" + headers.join(";") + "\r\n" + rows.join("\r\n");
+
+            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `report_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            
+            link.click();
+            
+            document.body.removeChild(link);
+        });
+
+        viewReportBtn.addEventListener('click', () => {
+            subscribeToReports();
+            navigate('report');
+        });
+        backToInspectionBtn.addEventListener('click', () => navigate('inspection'));
+
+        navigate('setup');
+    </script>
+
+</body>
+</html>
