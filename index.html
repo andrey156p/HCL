@@ -36,6 +36,13 @@
             margin-left: 1rem;
             margin-right: 0;
         }
+        .captured-image-preview {
+            max-width: 100px;
+            max-height: 100px;
+            object-fit: cover;
+            border-radius: 0.375rem; /* rounded-md */
+            margin-top: 0.5rem; /* mt-2 */
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -226,7 +233,8 @@
                 headerInspectorLabel: "Проверяющий:",
                 headerDepartmentLabel: "Отделение:",
                 commentPlaceholder: "Добавить комментарий (необязательно)",
-                chooseFileLabel: "Выберите фото",
+                chooseFileLabel: "Выбрать файл", // Изменено
+                takePhotoLabel: "Сделать фото", // Добавлено
                 standardSystems: ["Окна", "Двери", "Стены и потолок", "Кровати", "Электрооборудование", "Душ", "Туалет", "Краны", "Шкафы", "Тумбочки"]
             },
             'en': {
@@ -271,7 +279,8 @@
                 headerInspectorLabel: "Inspector:",
                 headerDepartmentLabel: "Department:",
                 commentPlaceholder: "Add a comment (optional)",
-                chooseFileLabel: "Choose photo",
+                chooseFileLabel: "Choose file",
+                takePhotoLabel: "Take Photo",
                 standardSystems: ["Windows", "Doors", "Walls and ceiling", "Beds", "Electrical equipment", "Shower", "Toilet", "Faucets", "Cabinets", "Bedside tables"]
             },
             'he': {
@@ -316,7 +325,8 @@
                 headerInspectorLabel: "בודק:",
                 headerDepartmentLabel: "מחלקה:",
                 commentPlaceholder: "הוסף הערה (אופציונלי)",
-                chooseFileLabel: "בחר תמונה",
+                chooseFileLabel: "בחר קובץ",
+                takePhotoLabel: "צלם תמונה",
                 standardSystems: ["חלונות", "דלתות", "קירות ותקרה", "מיטות", "ציוד חשמלי", "מקלחת", "שירותים", "ברזים", "ארונות", "שידות לילה"]
             }
         };
@@ -457,15 +467,26 @@
                 </div>
                 <div class="mt-3 space-y-3">
                     <textarea class="comment-input w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="${T.commentPlaceholder}"></textarea>
-                    <div class="flex items-center">
+                    <div class="flex flex-col items-start space-y-2">
+                        <button class="take-photo-btn bg-blue-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-600 text-sm">
+                            <i class="fas fa-camera mr-2"></i><span data-lang-key="takePhotoLabel">${T.takePhotoLabel}</span>
+                        </button>
+                        <input type="file" accept="image/*" capture="environment" class="photo-input hidden"/>
+                        <img class="captured-image-preview hidden"/>
                         <label class="block">
                             <span class="sr-only">${T.chooseFileLabel}</span>
-                            <input type="file" accept="image/*" class="photo-input block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
+                            <input type="file" accept="image/*" class="file-input block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
                         </label>
                     </div>
                 </div>
             `;
             const ratingButtons = div.querySelectorAll('.rating-btn');
+            const commentInput = div.querySelector('.comment-input');
+            const takePhotoButton = div.querySelector('.take-photo-btn');
+            const photoInput = div.querySelector('.photo-input'); // Для захвата с камеры
+            const fileInput = div.querySelector('.file-input'); // Для выбора файла
+            const imagePreview = div.querySelector('.captured-image-preview');
+
             ratingButtons.forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -475,14 +496,47 @@
                     checkIfRoomComplete();
                 });
             });
-            div.querySelector('.comment-input').addEventListener('input', (e) => {
+
+            commentInput.addEventListener('input', (e) => {
                 state.currentChecklist.get(systemName).comment = e.target.value;
             });
-            div.querySelector('.photo-input').addEventListener('change', (e) => {
+
+            // Обработка кнопки "Сделать фото"
+            takePhotoButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                photoInput.click(); // Инициируем клик по невидимому input file с capture
+            });
+
+            // Обработка выбора фото с камеры
+            photoInput.addEventListener('change', (e) => {
                 if (e.target.files.length > 0) {
-                   state.currentChecklist.get(systemName).photo = e.target.files[0];
+                    const file = e.target.files[0];
+                    state.currentChecklist.get(systemName).photo = file;
+                    // Показать превью
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        imagePreview.src = event.target.result;
+                        imagePreview.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
                 }
             });
+
+            // Обработка выбора файла из галереи
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                   const file = e.target.files[0];
+                   state.currentChecklist.get(systemName).photo = file;
+                   // Показать превью
+                   const reader = new FileReader();
+                   reader.onload = (event) => {
+                       imagePreview.src = event.target.result;
+                       imagePreview.classList.remove('hidden');
+                   };
+                   reader.readAsDataURL(file);
+                }
+            });
+
             return div;
         }
 
@@ -609,7 +663,6 @@
                 return [report.department, report.room, report.system, report.rating, sanitizedComment, report.photoURL || '', report.inspector, date].join(";");
             });
 
-            // Формируем контент CSV, добавляя BOM (\uFEFF) в начало для корректного отображения в Excel
             let csvContent = "\uFEFF" + headers.join(";") + "\r\n" + rows.join("\r\n");
 
             const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
