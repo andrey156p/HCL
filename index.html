@@ -186,7 +186,7 @@
                 loadingText: "Загрузка данных...",
                 savingText: "Сохранение отчета...",
                 compressingText: "Сжатие фото...",
-                uploadingText: "Загрузка фото...", // Новое
+                uploadingText: "Загрузка фото...",
                 setupTitle: "Инспекция Систем",
                 setupSubtitle: "Начало новой проверки",
                 inspectorLabel: "ФИО проверяющего",
@@ -228,23 +228,15 @@
                 chooseFileLabel: "Выбрать файл",
                 takePhotoLabel: "Сделать фото",
                 standardSystems: ["Окна", "Двери", "Стены и потолок", "Кровати", "Электрооборудование", "Душ", "Туалет", "Краны", "Шкафы", "Тумбочки"]
-            },
-            'en': {
-                 // ... English translations ...
-            },
-            'he': {
-                 // ... Hebrew translations ...
             }
         };
 
         const userLang = navigator.language.slice(0, 2) || 'en';
         const lang = translations[userLang] ? userLang : 'en';
-        const T = translations[lang];
+        const T = translations[userLang] || translations['en'];
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (lang === 'he') {
-                document.documentElement.setAttribute('dir', 'rtl');
-            }
+            if (lang === 'he') document.documentElement.setAttribute('dir', 'rtl');
             document.documentElement.lang = lang;
             document.querySelectorAll('[data-lang-key]').forEach(elem => {
                 const key = elem.getAttribute('data-lang-key');
@@ -362,7 +354,7 @@
                     <textarea class="comment-input w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="${T.commentPlaceholder}"></textarea>
                     <div class="flex flex-col items-start space-y-2">
                         <button class="take-photo-btn bg-blue-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-600 text-sm">
-                            <i class="fas fa-camera mr-2"></i><span data-lang-key="takePhotoLabel">${T.takePhotoLabel}</span>
+                            <i class="fas fa-camera mr-2"></i><span>${T.takePhotoLabel}</span>
                         </button>
                         <input type="file" accept="image/*" capture="environment" class="photo-input hidden"/>
                         <img class="captured-image-preview hidden"/>
@@ -383,23 +375,23 @@
             const handleImageFile = async (file) => {
                 if (!file) return;
                 showLoader(T.compressingText);
+                
+                // ИСПРАВЛЕНО: Более агрессивные и стабильные настройки сжатия
                 const options = {
-                    maxSizeMB: 0.5,
-                    maxWidthOrHeight: 800,
-                    useWebWorker: true,
+                    maxSizeMB: 0.2,
+                    maxWidthOrHeight: 600,
                 };
                 try {
                     const compressedFile = await imageCompression(file, options);
                     state.currentChecklist.get(systemName).photo = compressedFile;
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        imagePreview.src = event.target.result;
-                        imagePreview.classList.remove('hidden');
-                    };
-                    reader.readAsDataURL(compressedFile);
+                    imagePreview.src = URL.createObjectURL(compressedFile);
+                    imagePreview.classList.remove('hidden');
                 } catch (error) {
                     console.error('Ошибка при сжатии изображения:', error);
-                    alert('Не удалось сжать изображение. Попробуйте другое фото.');
+                    alert('Не удалось обработать изображение. Попробуйте другое фото.');
+                    // Очищаем инпут, чтобы можно было выбрать тот же файл снова
+                    photoInput.value = '';
+                    fileInput.value = '';
                 } finally {
                     hideLoader();
                 }
@@ -448,51 +440,35 @@
                 checkIfRoomComplete();
             }
         });
-
-        // =================================================================
-        // ИСПРАВЛЕННАЯ ЛОГИКА СОХРАНЕНИЯ ОТЧЕТА
-        // =================================================================
+        
         completeRoomBtn.addEventListener('click', async () => {
             showLoader(T.savingText);
 
-            // Создаем массив записей, которые нужно будет сохранить
-            const reportEntries = [];
-            for (const [system, data] of state.currentChecklist.entries()) {
-                reportEntries.push({ system, data });
-            }
+            const reportEntries = Array.from(state.currentChecklist.entries());
 
             try {
-                // ШАГ 1: Загружаем все фотографии и получаем их URL-адреса
-                showLoader(T.uploadingText);
-                const uploadPromises = reportEntries.map(async (entry) => {
+                const uploadPromises = reportEntries.map(async ([system, data]) => {
                     let photoURL = '';
-                    if (entry.data.photo) {
-                        const fileName = `${Date.now()}_${entry.system.replace(/\s+/g, '_')}.jpg`;
+                    if (data.photo) {
+                        showLoader(`${T.uploadingText} (${system})`);
+                        const fileName = `${Date.now()}_${system.replace(/\s+/g, '_')}.jpg`;
                         const storageRef = ref(storage, `inspections/${fileName}`);
-                        const snapshot = await uploadBytes(storageRef, entry.data.photo);
+                        const snapshot = await uploadBytes(storageRef, data.photo);
                         photoURL = await getDownloadURL(snapshot.ref);
                     }
-                    // Возвращаем полный объект для сохранения в Firestore
                     return {
-                        inspector: state.inspector,
-                        department: state.department,
-                        room: state.currentRoom,
-                        system: entry.system,
-                        rating: entry.data.rating,
-                        comment: entry.data.comment,
-                        photoURL: photoURL,
-                        createdAt: serverTimestamp()
+                        inspector: state.inspector, department: state.department, room: state.currentRoom,
+                        system: system, rating: data.rating, comment: data.comment,
+                        photoURL: photoURL, createdAt: serverTimestamp()
                     };
                 });
 
                 const firestorePayloads = await Promise.all(uploadPromises);
 
-                // ШАГ 2: Сохраняем все данные в Firestore
                 showLoader(T.savingText);
                 const firestorePromises = firestorePayloads.map(payload => addDoc(collection(db, "inspections"), payload));
                 await Promise.all(firestorePromises);
 
-                // ШАГ 3: Очистка и переход
                 alert(T.alertRoomReportSaved(state.currentRoom));
                 state.currentRoom = '';
                 state.currentChecklist.clear();
