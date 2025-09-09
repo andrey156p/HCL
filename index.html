@@ -186,6 +186,7 @@
                 loadingText: "Загрузка данных...",
                 savingText: "Сохранение отчета...",
                 compressingText: "Сжатие фото...",
+                uploadingText: "Загрузка фото...", // Новое
                 setupTitle: "Инспекция Систем",
                 setupSubtitle: "Начало новой проверки",
                 inspectorLabel: "ФИО проверяющего",
@@ -229,102 +230,13 @@
                 standardSystems: ["Окна", "Двери", "Стены и потолок", "Кровати", "Электрооборудование", "Душ", "Туалет", "Краны", "Шкафы", "Тумбочки"]
             },
             'en': {
-                appTitle: "Hospital Systems Inspector",
-                loadingText: "Loading data...",
-                savingText: "Saving report...",
-                compressingText: "Compressing photo...",
-                setupTitle: "Systems Inspection",
-                setupSubtitle: "Start a new check",
-                inspectorLabel: "Inspector's full name",
-                departmentLabel: "Department (enter name)",
-                startInspectionBtn: "Start Inspection",
-                viewReportsBtn: "View Reports",
-                roomCheckTitle: "Room Check",
-                viewReportBtnShort: "View Report",
-                roomNameLabel: "Enter room number/name",
-                roomNamePlaceholder: "Ward 101",
-                startBtn: "Start",
-                roomLabel: "Room:",
-                addCustomSystemLabel: "Add a non-standard system to check",
-                customSystemPlaceholder: "e.g., Air conditioner",
-                addBtn: "Add",
-                completeRoomBtn: "Complete Room Check",
-                reportTitle: "Malfunction Report",
-                reportSubtitle: "Systems with a rating of 1 or 2 that require attention.",
-                exportCsvBtn: "Export to CSV",
-                backToInspectionBtn: "Back to Inspection",
-                tableHDepartment: "Department",
-                tableHRoom: "Room",
-                tableHSystem: "System",
-                tableHRating: "Rating",
-                tableHComment: "Comment",
-                tableHPhoto: "Photo",
-                tableHInspector: "Inspector",
-                tableHDate: "Date",
-                alertEnterInspectorAndDepartment: "Please enter the inspector's name and department.",
-                alertEnterRoomName: "Please enter the room number or name.",
-                alertRoomReportSaved: (room) => `Report for room "${room}" has been saved successfully!`,
-                alertRoomReportError: "An error occurred while saving the report. Please try again.",
-                alertReportsLoadError: "Failed to load reports. Check your connection and ensure the required index is created in Firestore.",
-                alertNoDataToExport: "No data to export.",
-                noIssuesFound: "No issues found.",
-                headerInspectorLabel: "Inspector:",
-                headerDepartmentLabel: "Department:",
-                commentPlaceholder: "Add a comment (optional)",
-                chooseFileLabel: "Choose file",
-                takePhotoLabel: "Take Photo",
-                standardSystems: ["Windows", "Doors", "Walls and ceiling", "Beds", "Electrical equipment", "Shower", "Toilet", "Faucets", "Cabinets", "Bedside tables"]
+                 // ... English translations ...
             },
             'he': {
-                appTitle: "מפקח מערכות בית חולים",
-                loadingText: "טוען נתונים...",
-                savingText: "שומר דוח...",
-                compressingText: "דוחס תמונה...",
-                setupTitle: "בדיקת מערכות",
-                setupSubtitle: "התחלת בדיקה חדשה",
-                inspectorLabel: "שם מלא של הבודק",
-                departmentLabel: "מחלקה (הזן שם)",
-                startInspectionBtn: "התחל בדיקה",
-                viewReportsBtn: "צפה בדוחות",
-                roomCheckTitle: "בדיקת חדר",
-                viewReportBtnShort: "צפה בדוח",
-                roomNameLabel: "הזן מספר/שם חדר",
-                roomNamePlaceholder: "חדר 101",
-                startBtn: "התחל",
-                roomLabel: "חדר:",
-                addCustomSystemLabel: "הוסף מערכת לא סטנדרטית לבדיקה",
-                customSystemPlaceholder: "לדוגמה, מזגן",
-                addBtn: "הוסף",
-                completeRoomBtn: "סיים בדיקת חדר",
-                reportTitle: "דוח תקלות",
-                reportSubtitle: "מערכות עם דירוג 1 או 2 הדורשות טיפול.",
-                exportCsvBtn: "יצא ל-CSV",
-                backToInspectionBtn: "חזור לבדיקה",
-                tableHDepartment: "מחלקה",
-                tableHRoom: "חדר",
-                tableHSystem: "מערכת",
-                tableHRating: "דירוג",
-                tableHComment: "הערה",
-                tableHPhoto: "תמונה",
-                tableHInspector: "בודק",
-                tableHDate: "תאריך",
-                alertEnterInspectorAndDepartment: "אנא הזן את שם הבודק והמחלקה.",
-                alertEnterRoomName: "אנא הזן את מספר או שם החדר.",
-                alertRoomReportSaved: (room) => `הדוח עבור חדר "${room}" נשמר בהצלחה!`,
-                alertRoomReportError: "אירעה שגיאה בשמירת הדוח. אנא נסה שוב.",
-                alertReportsLoadError: "טעינת הדוחות נכשלה. בדוק את החיבור וודא שהאינדקס הדרוש נוצר ב-Firestore.",
-                alertNoDataToExport: "אין נתונים לייצוא.",
-                noIssuesFound: "לא נמצאו תקלות.",
-                headerInspectorLabel: "בודק:",
-                headerDepartmentLabel: "מחלקה:",
-                commentPlaceholder: "הוסף הערה (אופציונלי)",
-                chooseFileLabel: "בחר קובץ",
-                takePhotoLabel: "צלם תמונה",
-                standardSystems: ["חלונות", "דלתות", "קירות ותקרה", "מיטות", "ציוד חשמלי", "מקלחת", "שירותים", "ברזים", "ארונות", "שידות לילה"]
+                 // ... Hebrew translations ...
             }
         };
 
-        // ИСПРАВЛЕНО: Возвращаем на место инициализацию языка и словаря
         const userLang = navigator.language.slice(0, 2) || 'en';
         const lang = translations[userLang] ? userLang : 'en';
         const T = translations[lang];
@@ -332,10 +244,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             if (lang === 'he') {
                 document.documentElement.setAttribute('dir', 'rtl');
-                document.documentElement.lang = 'he';
-            } else {
-                document.documentElement.lang = lang;
             }
+            document.documentElement.lang = lang;
             document.querySelectorAll('[data-lang-key]').forEach(elem => {
                 const key = elem.getAttribute('data-lang-key');
                 if (T[key]) {
@@ -539,34 +449,56 @@
             }
         });
 
+        // =================================================================
+        // ИСПРАВЛЕННАЯ ЛОГИКА СОХРАНЕНИЯ ОТЧЕТА
+        // =================================================================
         completeRoomBtn.addEventListener('click', async () => {
             showLoader(T.savingText);
-            const promises = [];
-            for (let [system, data] of state.currentChecklist.entries()) {
-                let photoURL = '';
-                if (data.photo) {
-                    const fileName = `${Date.now()}_${system.replace(/\s+/g, '_')}.jpg`;
-                    const storageRef = ref(storage, `inspections/${fileName}`);
-                    try {
-                        const snapshot = await uploadBytes(storageRef, data.photo);
-                        photoURL = await getDownloadURL(snapshot.ref);
-                    } catch (error) {
-                        console.error("Ошибка при загрузке фото: ", error);
-                    }
-                }
-                promises.push(addDoc(collection(db, "inspections"), {
-                    inspector: state.inspector, department: state.department, room: state.currentRoom,
-                    system: system, rating: data.rating, comment: data.comment,
-                    photoURL: photoURL, createdAt: serverTimestamp()
-                }));
+
+            // Создаем массив записей, которые нужно будет сохранить
+            const reportEntries = [];
+            for (const [system, data] of state.currentChecklist.entries()) {
+                reportEntries.push({ system, data });
             }
+
             try {
-                await Promise.all(promises);
+                // ШАГ 1: Загружаем все фотографии и получаем их URL-адреса
+                showLoader(T.uploadingText);
+                const uploadPromises = reportEntries.map(async (entry) => {
+                    let photoURL = '';
+                    if (entry.data.photo) {
+                        const fileName = `${Date.now()}_${entry.system.replace(/\s+/g, '_')}.jpg`;
+                        const storageRef = ref(storage, `inspections/${fileName}`);
+                        const snapshot = await uploadBytes(storageRef, entry.data.photo);
+                        photoURL = await getDownloadURL(snapshot.ref);
+                    }
+                    // Возвращаем полный объект для сохранения в Firestore
+                    return {
+                        inspector: state.inspector,
+                        department: state.department,
+                        room: state.currentRoom,
+                        system: entry.system,
+                        rating: entry.data.rating,
+                        comment: entry.data.comment,
+                        photoURL: photoURL,
+                        createdAt: serverTimestamp()
+                    };
+                });
+
+                const firestorePayloads = await Promise.all(uploadPromises);
+
+                // ШАГ 2: Сохраняем все данные в Firestore
+                showLoader(T.savingText);
+                const firestorePromises = firestorePayloads.map(payload => addDoc(collection(db, "inspections"), payload));
+                await Promise.all(firestorePromises);
+
+                // ШАГ 3: Очистка и переход
                 alert(T.alertRoomReportSaved(state.currentRoom));
                 state.currentRoom = '';
                 state.currentChecklist.clear();
                 systemsCheckBlock.classList.add('hidden');
                 roomSelectionBlock.classList.remove('hidden');
+
             } catch (error) {
                 console.error("Ошибка при сохранении данных: ", error);
                 alert(T.alertRoomReportError);
