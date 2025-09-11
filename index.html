@@ -168,7 +168,7 @@
                 departmentLabel: "Отделение (впишите название)",
                 startInspectionBtn: "Начать инспекцию",
                 viewReportsBtn: "Посмотреть отчеты",
-                ratingHintBtn: "Памятка по оценкам", // Новая кнопка
+                ratingHintBtn: "Памятка по оценкам",
                 roomCheckTitle: "Проверка комнаты",
                 viewReportBtnShort: "Смотреть отчет",
                 roomNameLabel: "Введите номер/название комнаты",
@@ -204,8 +204,9 @@
             }
         };
 
-        const userLang = 'ru';
-        const T = translations[userLang];
+        // ИСПРАВЛЕНО: Возвращаем переменную lang и упрощаем логику
+        const lang = 'ru';
+        const T = translations[lang];
 
         document.addEventListener('DOMContentLoaded', () => {
             document.documentElement.lang = lang;
@@ -230,7 +231,7 @@
         const departmentInput = document.getElementById('department');
         const startInspectionBtn = document.getElementById('startInspectionBtn');
         const viewReportsFromHomeBtn = document.getElementById('viewReportsFromHomeBtn');
-        const showRatingHintBtn = document.getElementById('showRatingHintBtn'); // Новая кнопка
+        const showRatingHintBtn = document.getElementById('showRatingHintBtn');
         const roomNameInput = document.getElementById('roomName');
         const startRoomInspectionBtn = document.getElementById('startRoomInspectionBtn');
         const systemsCheckBlock = document.getElementById('systemsCheckBlock');
