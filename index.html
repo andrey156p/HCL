@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-lang-key="appTitle">Инспектор Больничных Систем</title>
-    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
@@ -28,14 +27,10 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        [dir="rtl"] th, [dir="rtl"] td { text-align: right; }
-        [dir="rtl"] .file\:mr-4 { margin-left: 1rem; margin-right: 0; }
-        .captured-image-preview {
-            max-width: 100px;
-            max-height: 100px;
-            object-fit: cover;
-            border-radius: 0.375rem;
-            margin-top: 0.5rem;
+        /* Стиль для разделителя в отчете */
+        .department-separator td {
+            font-weight: bold;
+            border-top: 2px solid #a0aec0; /* gray-500 */
         }
     </style>
 </head>
@@ -43,35 +38,31 @@
 
     <div id="loading-overlay" class="fixed inset-0 bg-white/80 z-50 flex-col items-center justify-center hidden">
         <div class="loader"></div>
-        <p id="loadingText" data-lang-key="loadingText" class="mt-4 text-gray-600 font-medium">Загрузка данных...</p>
+        <p id="loadingText" class="mt-4 text-gray-600 font-medium" data-lang-key="loadingText"></p>
     </div>
 
     <div id="setupPage" class="page active p-4 md:p-8 max-w-lg mx-auto">
         <div class="bg-white p-6 rounded-xl shadow-md">
             <div class="text-center mb-6">
                 <i class="fas fa-hospital-user fa-3x text-indigo-500"></i>
-                <h1 data-lang-key="setupTitle" class="text-2xl font-bold text-gray-800 mt-2">Инспекция Систем</h1>
-                <p data-lang-key="setupSubtitle" class="text-gray-500">Начало новой проверки</p>
+                <h1 class="text-2xl font-bold text-gray-800 mt-2" data-lang-key="setupTitle"></h1>
+                <p class="text-gray-500" data-lang-key="setupSubtitle"></p>
             </div>
             
             <div class="space-y-4">
                 <div>
-                    <label for="inspectorName" data-lang-key="inspectorLabel" class="block text-sm font-medium text-gray-700">ФИО проверяющего</label>
+                    <label for="inspectorName" class="block text-sm font-medium text-gray-700" data-lang-key="inspectorLabel"></label>
                     <input type="text" id="inspectorName" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
                 <div>
-                    <label for="department" data-lang-key="departmentLabel" class="block text-sm font-medium text-gray-700">Отделение (впишите название)</label>
+                    <label for="department" class="block text-sm font-medium text-gray-700" data-lang-key="departmentLabel"></label>
                     <input type="text" id="department" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
             </div>
 
             <div class="mt-8">
-                <button id="startInspectionBtn" data-lang-key="startInspectionBtn" class="w-full bg-indigo-600 text-white py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Начать инспекцию
-                </button>
-                <button id="viewReportsFromHomeBtn" data-lang-key="viewReportsBtn" class="w-full bg-gray-500 text-white py-2 px-4 mt-3 rounded-md shadow-sm text-base font-medium hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
-                    Посмотреть отчеты
-                </button>
+                <button id="startInspectionBtn" class="w-full bg-indigo-600 text-white py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" data-lang-key="startInspectionBtn"></button>
+                <button id="viewReportsFromHomeBtn" class="w-full bg-gray-500 text-white py-2 px-4 mt-3 rounded-md shadow-sm text-base font-medium hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400" data-lang-key="viewReportsBtn"></button>
             </div>
         </div>
     </div>
@@ -80,43 +71,38 @@
          <div class="bg-white p-6 rounded-xl shadow-md">
             <div class="flex justify-between items-center mb-4 border-b pb-4">
                 <div>
-                    <h2 data-lang-key="roomCheckTitle" class="text-xl font-bold text-gray-800">Проверка комнаты</h2>
+                    <h2 class="text-xl font-bold text-gray-800" data-lang-key="roomCheckTitle"></h2>
                     <p class="text-sm text-gray-500">
                         <span id="headerInspector"></span> - <span id="headerDepartment"></span>
                     </p>
                 </div>
                 <button id="viewReportBtn" class="bg-green-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-green-600">
-                    <i class="fas fa-chart-line mr-2"></i><span data-lang-key="viewReportBtnShort">Смотреть отчет</span>
+                    <i class="fas fa-chart-line mr-2"></i><span data-lang-key="viewReportBtnShort"></span>
                 </button>
             </div>
             
             <div id="roomSelectionBlock" class="mb-6">
-                <label for="roomName" data-lang-key="roomNameLabel" class="block text-sm font-medium text-gray-700">Введите номер/название комнаты</label>
+                <label for="roomName" class="block text-sm font-medium text-gray-700" data-lang-key="roomNameLabel"></label>
                 <div class="mt-1 flex rounded-md shadow-sm">
                     <input type="text" id="roomName" class="flex-1 block w-full min-w-0 rounded-none rounded-l-md px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" data-lang-key="roomNamePlaceholder">
-                    <button id="startRoomInspectionBtn" data-lang-key="startBtn" class="inline-flex items-center px-4 py-2 border border-l-0 border-indigo-600 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700">
-                        Начать
-                    </button>
+                    <button id="startRoomInspectionBtn" class="inline-flex items-center px-4 py-2 border border-l-0 border-indigo-600 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700" data-lang-key="startBtn"></button>
                 </div>
             </div>
             
             <div id="systemsCheckBlock" class="hidden">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4"><span data-lang-key="roomLabel">Комната:</span> <span id="currentRoomName" class="text-indigo-600"></span></h3>
-                <div id="systemsList" class="space-y-5">
-                    </div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-4"><span data-lang-key="roomLabel"></span> <span id="currentRoomName" class="text-indigo-600"></span></h3>
+                <div id="systemsList" class="space-y-5"></div>
                 
                 <div class="mt-6 pt-4 border-t">
-                     <label for="customSystemName" data-lang-key="addCustomSystemLabel" class="block text-sm font-medium text-gray-700">Добавить нестандартную систему для проверки</label>
+                     <label for="customSystemName" class="block text-sm font-medium text-gray-700" data-lang-key="addCustomSystemLabel"></label>
                     <div class="mt-1 flex rounded-md shadow-sm">
-                        <input type="text" id="customSystemName" data-lang-key="customSystemPlaceholder" class="flex-1 block w-full min-w-0 rounded-none rounded-l-md px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                        <button id="addCustomSystemBtn" data-lang-key="addBtn" class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-r-md">Добавить</button>
+                        <input type="text" id="customSystemName" class="flex-1 block w-full min-w-0 rounded-none rounded-l-md px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" data-lang-key="customSystemPlaceholder">
+                        <button id="addCustomSystemBtn" class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-r-md" data-lang-key="addBtn"></button>
                     </div>
                 </div>
                 
                 <div class="mt-8 flex justify-end">
-                    <button id="completeRoomBtn" data-lang-key="completeRoomBtn" class="bg-indigo-600 text-white py-3 px-6 rounded-md shadow-sm hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                        Завершить проверку комнаты
-                    </button>
+                    <button id="completeRoomBtn" class="bg-indigo-600 text-white py-3 px-6 rounded-md shadow-sm hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed" data-lang-key="completeRoomBtn"></button>
                 </div>
             </div>
         </div>
@@ -126,15 +112,15 @@
         <div class="bg-white p-6 rounded-xl shadow-md max-w-7xl mx-auto">
             <div class="flex justify-between items-center mb-4 border-b pb-4">
                 <div>
-                    <h1 data-lang-key="reportTitle" class="text-2xl font-bold text-gray-800">Отчет о неисправностях</h1>
-                    <p data-lang-key="reportSubtitle" class="text-gray-500">Системы с оценкой 1 или 2, требующие внимания.</p>
+                    <h1 class="text-2xl font-bold text-gray-800" data-lang-key="reportTitle"></h1>
+                    <p class="text-gray-500" data-lang-key="reportSubtitle"></p>
                 </div>
                 <div class="flex space-x-2">
                      <button id="exportCsvBtn" class="bg-blue-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-600">
-                        <i class="fas fa-file-csv mr-2"></i><span data-lang-key="exportCsvBtn">Экспорт в CSV</span>
+                        <i class="fas fa-file-csv mr-2"></i><span data-lang-key="exportCsvBtn"></span>
                     </button>
                     <button id="backToInspectionBtn" class="bg-gray-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-gray-600">
-                        <span data-lang-key="backToInspectionBtn">Назад к инспекции</span>
+                        <span data-lang-key="backToInspectionBtn"></span>
                     </button>
                 </div>
             </div>
@@ -143,29 +129,25 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th data-lang-key="tableHDepartment" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Отделение</th>
-                            <th data-lang-key="tableHRoom" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Комната</th>
-                            <th data-lang-key="tableHSystem" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Система</th>
-                            <th data-lang-key="tableHRating" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Оценка</th>
-                            <th data-lang-key="tableHComment" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Комментарий</th>
-                            <th data-lang-key="tableHPhoto" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Фото</th>
-                            <th data-lang-key="tableHInspector" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Проверяющий</th>
-                            <th data-lang-key="tableHDate" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHDepartment"></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHRoom"></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHSystem"></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHRating"></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHComment"></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHInspector"></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHDate"></th>
                         </tr>
                     </thead>
-                    <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200">
-                        </tbody>
+                    <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
+        
         const firebaseConfig = {
             apiKey: "AIzaSyDTI7k9eI21wKVbsn8pm3cLf2XPWnZeITY",
             authDomain: "hospital-inspector-app.firebaseapp.com",
@@ -178,15 +160,12 @@
         
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const storage = getStorage(app);
 
         const translations = {
             'ru': {
                 appTitle: "Инспектор Больничных Систем",
                 loadingText: "Загрузка данных...",
                 savingText: "Сохранение отчета...",
-                compressingText: "Сжатие фото...",
-                uploadingText: "Загрузка фото...",
                 setupTitle: "Инспекция Систем",
                 setupSubtitle: "Начало новой проверки",
                 inspectorLabel: "ФИО проверяющего",
@@ -212,36 +191,32 @@
                 tableHSystem: "Система",
                 tableHRating: "Оценка",
                 tableHComment: "Комментарий",
-                tableHPhoto: "Фото",
                 tableHInspector: "Проверяющий",
                 tableHDate: "Дата",
                 alertEnterInspectorAndDepartment: "Пожалуйста, введите имя проверяющего и название отделения.",
                 alertEnterRoomName: "Пожалуйста, введите номер или название комнаты.",
                 alertRoomReportSaved: (room) => `Отчет по комнате "${room}" успешно сохранен!`,
-                alertRoomReportError: "Произошла ошибка при сохранении отчета. Пожалуйста, попробуйте еще раз.",
-                alertReportsLoadError: "Не удалось загрузить отчеты. Проверьте подключение и убедитесь, что в Firestore создан необходимый индекс.",
-                alertNoDataToExport: "Нет данных для экспорта.",
+                alertRoomReportError: "Произошла ошибка при сохранении отчета.",
+                alertReportsLoadError: "Не удалось загрузить отчеты.",
                 noIssuesFound: "Неисправностей не найдено.",
                 headerInspectorLabel: "Проверяющий:",
                 headerDepartmentLabel: "Отделение:",
                 commentPlaceholder: "Добавить комментарий (необязательно)",
-                chooseFileLabel: "Выбрать файл",
-                takePhotoLabel: "Сделать фото",
+                ratingExplanation: "ПАМЯТКА ПО ОЦЕНКАМ:\n\n4 - Хорошее состояние\n3 - Удовлетворительно\n2 - Требуется ремонт/восстановление\n1 - Требуется замена/капитальный ремонт",
                 standardSystems: ["Окна", "Двери", "Стены и потолок", "Кровати", "Электрооборудование", "Душ", "Туалет", "Краны", "Шкафы", "Тумбочки"]
             }
         };
 
         const userLang = navigator.language.slice(0, 2) || 'en';
-        const lang = translations[userLang] ? userLang : 'en';
-        const T = translations[userLang] || translations['en'];
+        const lang = translations[userLang] ? userLang : 'ru'; // Устанавливаем 'ru' как основной язык
+        const T = translations[lang];
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (lang === 'he') document.documentElement.setAttribute('dir', 'rtl');
             document.documentElement.lang = lang;
             document.querySelectorAll('[data-lang-key]').forEach(elem => {
                 const key = elem.getAttribute('data-lang-key');
                 if (T[key]) {
-                    if (elem.placeholder !== undefined && !elem.dataset.value) {
+                    if (elem.placeholder !== undefined) {
                         elem.placeholder = T[key];
                     } else {
                         elem.textContent = T[key];
@@ -319,6 +294,9 @@
                 alert(T.alertEnterRoomName);
                 return;
             }
+            // Показываем памятку по оценкам
+            alert(T.ratingExplanation);
+
             state.currentRoom = room;
             currentRoomNameSpan.textContent = room;
             renderSystemsList(standardSystems);
@@ -332,7 +310,7 @@
             systemsList.innerHTML = '';
             state.currentChecklist.clear();
             systems.forEach(system => {
-                state.currentChecklist.set(system, { rating: 0, comment: '', photo: null });
+                state.currentChecklist.set(system, { rating: 0, comment: '' });
                 systemsList.appendChild(createSystemChecklistItem(system));
             });
             checkIfRoomComplete();
@@ -342,7 +320,6 @@
             const div = document.createElement('div');
             div.className = 'p-4 border rounded-lg bg-gray-50';
             div.dataset.system = systemName;
-
             div.innerHTML = `
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center">
                     <h4 class="text-md font-semibold text-gray-800 mb-2 sm:mb-0">${systemName}</h4>
@@ -350,80 +327,23 @@
                         ${[1,2,3,4].map(n => `<button data-rating="${n}" class="rating-btn rating-${n} w-10 h-10 rounded-full font-bold border transition-colors">${n}</button>`).join('')}
                     </div>
                 </div>
-                <div class="mt-3 space-y-3">
+                <div class="mt-3">
                     <textarea class="comment-input w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="${T.commentPlaceholder}"></textarea>
-                    <div class="flex flex-col items-start space-y-2">
-                        <button class="take-photo-btn bg-blue-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-600 text-sm">
-                            <i class="fas fa-camera mr-2"></i><span>${T.takePhotoLabel}</span>
-                        </button>
-                        <input type="file" accept="image/*" capture="environment" class="photo-input hidden"/>
-                        <img class="captured-image-preview hidden"/>
-                        <label class="block">
-                            <span class="sr-only">${T.chooseFileLabel}</span>
-                            <input type="file" accept="image/*" class="file-input block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
-                        </label>
-                    </div>
                 </div>
             `;
             const ratingButtons = div.querySelectorAll('.rating-btn');
-            const commentInput = div.querySelector('.comment-input');
-            const takePhotoButton = div.querySelector('.take-photo-btn');
-            const photoInput = div.querySelector('.photo-input');
-            const fileInput = div.querySelector('.file-input');
-            const imagePreview = div.querySelector('.captured-image-preview');
-
-            const handleImageFile = async (file) => {
-                if (!file) return;
-                showLoader(T.compressingText);
-                
-                // ИСПРАВЛЕНО: Более агрессивные и стабильные настройки сжатия
-                const options = {
-                    maxSizeMB: 0.2,
-                    maxWidthOrHeight: 600,
-                };
-                try {
-                    const compressedFile = await imageCompression(file, options);
-                    state.currentChecklist.get(systemName).photo = compressedFile;
-                    imagePreview.src = URL.createObjectURL(compressedFile);
-                    imagePreview.classList.remove('hidden');
-                } catch (error) {
-                    console.error('Ошибка при сжатии изображения:', error);
-                    alert('Не удалось обработать изображение. Попробуйте другое фото.');
-                    // Очищаем инпут, чтобы можно было выбрать тот же файл снова
-                    photoInput.value = '';
-                    fileInput.value = '';
-                } finally {
-                    hideLoader();
-                }
-            };
-
             ratingButtons.forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
                     ratingButtons.forEach(b => b.classList.remove('selected'));
                     btn.classList.add('selected');
-                    state.currentChecklist.get(systemName).rating = parseInt(btn.dataset.rating);
+                    state.currentChecklist.get(systemName).rating = parseInt(btn.dataset.rating, 10);
                     checkIfRoomComplete();
                 });
             });
-
-            commentInput.addEventListener('input', (e) => {
+            div.querySelector('.comment-input').addEventListener('input', (e) => {
                 state.currentChecklist.get(systemName).comment = e.target.value;
             });
-            
-            takePhotoButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                photoInput.click();
-            });
-            
-            photoInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) handleImageFile(e.target.files[0]);
-            });
-
-            fileInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) handleImageFile(e.target.files[0]);
-            });
-
             return div;
         }
 
@@ -434,7 +354,7 @@
         addCustomSystemBtn.addEventListener('click', () => {
             const customName = customSystemNameInput.value.trim();
             if (customName && !state.currentChecklist.has(customName)) {
-                state.currentChecklist.set(customName, { rating: 0, comment: '', photo: null });
+                state.currentChecklist.set(customName, { rating: 0, comment: '' });
                 systemsList.appendChild(createSystemChecklistItem(customName));
                 customSystemNameInput.value = '';
                 checkIfRoomComplete();
@@ -443,38 +363,25 @@
         
         completeRoomBtn.addEventListener('click', async () => {
             showLoader(T.savingText);
-
-            const reportEntries = Array.from(state.currentChecklist.entries());
-
+            const promises = [];
+            for (const [system, data] of state.currentChecklist.entries()) {
+                promises.push(addDoc(collection(db, "inspections"), {
+                    inspector: state.inspector,
+                    department: state.department,
+                    room: state.currentRoom,
+                    system: system,
+                    rating: data.rating,
+                    comment: data.comment,
+                    createdAt: serverTimestamp()
+                }));
+            }
             try {
-                const uploadPromises = reportEntries.map(async ([system, data]) => {
-                    let photoURL = '';
-                    if (data.photo) {
-                        showLoader(`${T.uploadingText} (${system})`);
-                        const fileName = `${Date.now()}_${system.replace(/\s+/g, '_')}.jpg`;
-                        const storageRef = ref(storage, `inspections/${fileName}`);
-                        const snapshot = await uploadBytes(storageRef, data.photo);
-                        photoURL = await getDownloadURL(snapshot.ref);
-                    }
-                    return {
-                        inspector: state.inspector, department: state.department, room: state.currentRoom,
-                        system: system, rating: data.rating, comment: data.comment,
-                        photoURL: photoURL, createdAt: serverTimestamp()
-                    };
-                });
-
-                const firestorePayloads = await Promise.all(uploadPromises);
-
-                showLoader(T.savingText);
-                const firestorePromises = firestorePayloads.map(payload => addDoc(collection(db, "inspections"), payload));
-                await Promise.all(firestorePromises);
-
+                await Promise.all(promises);
                 alert(T.alertRoomReportSaved(state.currentRoom));
                 state.currentRoom = '';
                 state.currentChecklist.clear();
                 systemsCheckBlock.classList.add('hidden');
                 roomSelectionBlock.classList.remove('hidden');
-
             } catch (error) {
                 console.error("Ошибка при сохранении данных: ", error);
                 alert(T.alertRoomReportError);
@@ -487,7 +394,8 @@
         function subscribeToReports() {
             showLoader();
             if (unsubscribe) unsubscribe();
-            const q = query(collection(db, "inspections"), where("rating", "in", [1, 2]), orderBy("createdAt", "desc"));
+            // Запрашиваем сортировку сначала по отделению, потом по дате
+            const q = query(collection(db, "inspections"), where("rating", "in", [1, 2]), orderBy("department"), orderBy("createdAt", "desc"));
             unsubscribe = onSnapshot(q, (querySnapshot) => {
                 state.allReports = [];
                 querySnapshot.forEach((doc) => state.allReports.push({ id: doc.id, ...doc.data() }));
@@ -503,23 +411,29 @@
         function renderReportTable(reports) {
             reportTableBody.innerHTML = '';
             if (reports.length === 0) {
-                reportTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-gray-500">${T.noIssuesFound}</td></tr>`;
+                reportTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-500">${T.noIssuesFound}</td></tr>`;
                 return;
             }
+            
+            let lastDepartment = null;
             reports.forEach(report => {
                 const tr = document.createElement('tr');
+                
+                // Если это новое отделение, добавляем класс-разделитель
+                if (report.department !== lastDepartment) {
+                    tr.classList.add('department-separator');
+                    lastDepartment = report.department;
+                }
+
                 const ratingColor = report.rating === 1 ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800';
                 const date = report.createdAt ? report.createdAt.toDate().toLocaleString(lang) : 'N/A';
-                const photoCell = report.photoURL 
-                    ? `<a href="${report.photoURL}" target="_blank" rel="noopener noreferrer"><img src="${report.photoURL}" alt="Inspection photo" class="h-12 w-12 object-cover rounded-md"></a>`
-                    : 'Нет фото';
+                
                 tr.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${report.department}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${report.room}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${report.system}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${ratingColor}">${report.rating}</span></td>
                     <td class="px-6 py-4 text-sm text-gray-500" style="max-width: 200px; white-space: normal;">${report.comment}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${photoCell}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${report.inspector}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date}</td>
                 `;
@@ -532,11 +446,11 @@
                 alert(T.alertNoDataToExport);
                 return;
             }
-            const headers = [T.tableHDepartment, T.tableHRoom, T.tableHSystem, T.tableHRating, T.tableHComment, "Photo URL", T.tableHInspector, T.tableHDate];
+            const headers = [T.tableHDepartment, T.tableHRoom, T.tableHSystem, T.tableHRating, T.tableHComment, T.tableHInspector, T.tableHDate];
             const rows = state.allReports.map(report => {
                 const date = report.createdAt ? report.createdAt.toDate().toLocaleString(lang) : 'N/A';
                 const sanitizedComment = `"${(report.comment || '').replace(/"/g, '""')}"`;
-                return [report.department, report.room, report.system, report.rating, sanitizedComment, report.photoURL || '', report.inspector, date].join(";");
+                return [report.department, report.room, report.system, report.rating, sanitizedComment, report.inspector, date].join(";");
             });
             let csvContent = "\uFEFF" + headers.join(";") + "\r\n" + rows.join("\r\n");
             const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
