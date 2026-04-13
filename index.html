@@ -37,6 +37,28 @@
         <p id="loadingText" class="mt-4 text-gray-600 font-medium" data-lang-key="loadingText"></p>
     </div>
 
+    <div id="filterModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full mx-4">
+            <h3 class="text-xl font-bold mb-4 text-gray-800">Поиск дефектной ведомости</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Дата проверки</label>
+                    <input type="date" id="filterDate" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Отделение</label>
+                    <input type="text" id="filterDept" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="Например, A 1">
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="closeFilterBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">Отмена</button>
+                <button id="applyFilterBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+                    <i class="fas fa-search mr-2"></i>Найти
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="setupPage" class="page active p-4 md:p-8 max-w-lg mx-auto">
         <div class="bg-white p-6 rounded-xl shadow-md">
             <div class="text-center mb-6">
@@ -152,13 +174,14 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHDate"></th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHDepartment"></th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHRoom"></th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHSystem"></th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHRating"></th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHComment"></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHPhoto"></th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHInspector"></th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="tableHDate"></th>
                         </tr>
                     </thead>
                     <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200"></tbody>
@@ -168,7 +191,7 @@
     </div>
 
     <script>
-        // ВАЖНО: Вставьте сюда ваш URL
+        // ВАЖНО: Вставьте сюда ваш URL после перепубликации скрипта
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxMN6s8ektwhHxuE_8xDz1ZaeqYyXaLyniwi_xFpbzVEjFEo_AUd6PybJk6nGKxmy7E/exec";
 
         const translations = {
@@ -176,6 +199,7 @@
                 appTitle: "Инспектор Больничных Систем",
                 loadingText: "Загрузка данных...",
                 savingText: "Отправка в Google Sheets...",
+                fetchingText: "Поиск в базе данных...",
                 setupTitle: "Инспекция Систем",
                 setupSubtitle: "Начало новой проверки",
                 inspectorLabel: "ФИО проверяющего",
@@ -199,9 +223,9 @@
                 summaryReplaceTitle: "Вам необходимо взять со склада для замены (Оценка 1):",
                 summaryEmpty: "Замен не требуется. Всё исправно!",
                 reportTitle: "Дефектная ведомость",
-                reportSubtitle: "Системы с оценкой 1 и 2, требующие ремонта или замены.",
+                reportSubtitle: "История зафиксированных дефектов из базы данных.",
                 exportCsvBtn: "Экспорт в CSV",
-                backToInspectionBtn: "Назад к инспекции",
+                backToInspectionBtn: "На главную / Назад",
                 tableHDepartment: "Отделение",
                 tableHRoom: "Комната",
                 tableHSystem: "Система",
@@ -209,11 +233,12 @@
                 tableHComment: "Комментарий",
                 tableHInspector: "Проверяющий",
                 tableHDate: "Дата",
+                tableHPhoto: "Фото",
                 alertEnterInspectorAndDepartment: "Пожалуйста, введите имя проверяющего и название отделения.",
                 alertEnterRoomName: "Пожалуйста, введите номер или название комнаты.",
                 alertRoomReportSaved: (room) => `Отчет по комнате "${room}" успешно отправлен в базу!`,
                 alertRoomReportError: "Произошла ошибка при сохранении отчета.",
-                noIssuesFound: "В текущей сессии дефектов не зафиксировано.",
+                noIssuesFound: "За указанный период дефектов не найдено.",
                 headerInspectorLabel: "Проверяющий:",
                 headerDepartmentLabel: "Отделение:",
                 commentPlaceholder: "Добавить комментарий (необязательно)",
@@ -251,14 +276,16 @@
             });
         });
 
-        let state = { inspector: '', department: '', currentRoom: '', currentChecklist: new Map(), allReports: [] };
+        // state.allReports теперь локальный для "Итога отделения"
+        // state.fetchedReports хранит данные загруженные из БД для вывода в таблицу
+        let state = { inspector: '', department: '', currentRoom: '', currentChecklist: new Map(), allReports: [], fetchedReports: [] };
         const standardSystems = T.standardSystems;
 
         const pages = { 
             setup: document.getElementById('setupPage'), 
             inspection: document.getElementById('inspectionPage'), 
             report: document.getElementById('reportPage'), 
-            summary: document.getElementById('summaryPage'), // Добавлена страница итогов
+            summary: document.getElementById('summaryPage'),
             loading: document.getElementById('loading-overlay') 
         };
         
@@ -283,11 +310,17 @@
         const customSystemNameInput = document.getElementById('customSystemName');
         const addCustomSystemBtn = document.getElementById('addCustomSystemBtn');
         
-        // Элементы страницы итогов
         const summaryDeptName = document.getElementById('summaryDeptName');
         const replacementList = document.getElementById('replacementList');
         const summaryToReportBtn = document.getElementById('summaryToReportBtn');
         const closeSummaryBtn = document.getElementById('closeSummaryBtn');
+
+        // Элементы модального окна фильтра
+        const filterModal = document.getElementById('filterModal');
+        const filterDateInput = document.getElementById('filterDate');
+        const filterDeptInput = document.getElementById('filterDept');
+        const closeFilterBtn = document.getElementById('closeFilterBtn');
+        const applyFilterBtn = document.getElementById('applyFilterBtn');
 
         function showLoader(text = T.loadingText) {
             loadingText.textContent = text;
@@ -303,6 +336,102 @@
             if (pages[pageName]) pages[pageName].classList.add('active');
         }
 
+        // ЛОГИКА ФИЛЬТРА И ПОЛУЧЕНИЯ ДАННЫХ ИЗ БАЗЫ
+        function openFilterModal() {
+            // По умолчанию ставим сегодняшнюю дату
+            const today = new Date().toISOString().split('T')[0];
+            filterDateInput.value = today;
+            // Подставляем текущее отделение, если оно введено
+            filterDeptInput.value = state.department || ''; 
+            filterModal.classList.remove('hidden');
+        }
+
+        closeFilterBtn.addEventListener('click', () => {
+            filterModal.classList.add('hidden');
+        });
+
+        applyFilterBtn.addEventListener('click', async () => {
+            const rawDate = filterDateInput.value; // формат YYYY-MM-DD
+            const dept = filterDeptInput.value.trim();
+            
+            // Преобразуем YYYY-MM-DD в DD/MM/YYYY для поиска в Google Sheets
+            let formattedDate = "";
+            if (rawDate) {
+                const parts = rawDate.split('-');
+                if(parts.length === 3) {
+                    formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+            }
+            
+            filterModal.classList.add('hidden');
+            showLoader(T.fetchingText);
+            
+            try {
+                // Добавляем параметры к URL
+                const url = new URL(GOOGLE_SCRIPT_URL);
+                if (formattedDate) url.searchParams.append("date", formattedDate);
+                if (dept) url.searchParams.append("department", dept);
+                
+                // Делаем GET запрос
+                const response = await fetch(url.toString());
+                const result = await response.json();
+                
+                if (result.status === "success") {
+                    state.fetchedReports = result.data;
+                    renderFetchedReportTable(state.fetchedReports);
+                    navigate('report');
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error("Ошибка получения данных: ", error);
+                alert("Ошибка соединения с базой данных. Убедитесь, что скрипт переопубликован.");
+            } finally {
+                hideLoader();
+            }
+        });
+
+        // Назначаем открытие фильтра на все кнопки "Дефектная ведомость"
+        viewReportsFromHomeBtn.addEventListener('click', openFilterModal);
+        viewReportBtn.addEventListener('click', openFilterModal);
+        summaryToReportBtn.addEventListener('click', openFilterModal);
+
+        // Отрисовка данных, полученных из БД
+        function renderFetchedReportTable(reports) {
+            reportTableBody.innerHTML = '';
+            if (reports.length === 0) {
+                reportTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-gray-500">${T.noIssuesFound}</td></tr>`;
+                return;
+            }
+            
+            // Данные из БД идут в хронологическом порядке. Переворачиваем, чтобы новые были сверху
+            const sortedReports = reports.reverse();
+
+            sortedReports.forEach(report => {
+                const tr = document.createElement('tr');
+                const score = parseInt(report.rating);
+                let ratingColor = 'bg-green-100 text-green-800';
+                if (score === 1) ratingColor = 'bg-red-100 text-red-800';
+                else if (score === 2) ratingColor = 'bg-orange-100 text-orange-800';
+
+                // Формируем красивую ссылку на фото, если она есть
+                const photoLink = report.photo ? `<a href="${report.photo}" target="_blank" class="text-indigo-600 hover:text-indigo-900 font-medium"><i class="fas fa-image mr-1"></i>Фото</a>` : '<span class="text-gray-400">-</span>';
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${report.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${report.department}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${report.room}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${report.system}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${ratingColor}">${report.rating}</span></td>
+                    <td class="px-6 py-4 text-sm text-gray-500" style="max-width: 200px; white-space: normal;">${report.comment}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">${photoLink}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${report.inspector}</td>
+                `;
+                reportTableBody.appendChild(tr);
+            });
+        }
+
+        // Логика сжатия и отправки
         function compressPhoto(file, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -344,11 +473,6 @@
             navigate('inspection');
         });
 
-        viewReportsFromHomeBtn.addEventListener('click', () => {
-            renderReportTable(state.allReports);
-            navigate('report');
-        });
-
         showRatingHintBtn.addEventListener('click', () => {
             alert(T.ratingExplanation);
         });
@@ -368,7 +492,6 @@
             checkIfRoomComplete();
         });
 
-        // ЛОГИКА ЗАВЕРШЕНИЯ ПРОВЕРКИ ОТДЕЛЕНИЯ
         finishDeptBtn.addEventListener('click', () => {
             if (confirm(T.finishDeptConfirm)) {
                 generateSummary();
@@ -379,19 +502,18 @@
             summaryDeptName.textContent = state.department;
             replacementList.innerHTML = '';
             
-            // Фильтруем только те элементы, где оценка = 1 (Замена) для текущего отделения
+            // Фильтруем данные из текущей сессии
             const toReplace = state.allReports.filter(r => r.rating === 1 && r.department === state.department);
             
             if (toReplace.length === 0) {
                 replacementList.innerHTML = `<li class="text-green-600 list-none"><i class="fas fa-check-circle mr-2"></i>${T.summaryEmpty}</li>`;
             } else {
-                // Подсчет количества одинаковых систем
                 const tally = toReplace.reduce((acc, curr) => {
-                    acc[curr.system] = (acc[curr.system] || 0) + 1;
+                    const itemName = T.systemDbMap[curr.system] || curr.system; 
+                    acc[itemName] = (acc[itemName] || 0) + 1;
                     return acc;
                 }, {});
                 
-                // Вывод списка
                 for (const [system, count] of Object.entries(tally)) {
                     const li = document.createElement('li');
                     li.innerHTML = `<span>${system}</span>: <span class="font-bold ml-2">${count} шт.</span>`;
@@ -402,13 +524,7 @@
             navigate('summary');
         }
 
-        summaryToReportBtn.addEventListener('click', () => {
-            renderReportTable(state.allReports);
-            navigate('report');
-        });
-
         closeSummaryBtn.addEventListener('click', () => {
-            // Очищаем сессию для новой проверки
             state.department = '';
             state.currentRoom = '';
             state.allReports = [];
@@ -519,7 +635,7 @@
                     state.allReports.push({
                         department: state.department,
                         room: state.currentRoom,
-                        system: system, 
+                        system: system, // Оставляем на русском для экрана итогов
                         rating: data.rating,
                         comment: data.comment,
                         inspector: state.inspector,
@@ -552,46 +668,16 @@
             }
         });
         
-        function renderReportTable(reports) {
-            reportTableBody.innerHTML = '';
-            if (reports.length === 0) {
-                reportTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-500">${T.noIssuesFound}</td></tr>`;
-                return;
-            }
-            
-            const sortedReports = [...reports].sort((a, b) => b.createdAt - a.createdAt);
-
-            sortedReports.forEach(report => {
-                const tr = document.createElement('tr');
-                let ratingColor = 'bg-green-100 text-green-800';
-                if (report.rating === 1) ratingColor = 'bg-red-100 text-red-800';
-                else if (report.rating === 2) ratingColor = 'bg-orange-100 text-orange-800';
-
-                const dateStr = report.createdAt.toLocaleString(lang);
-                
-                tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${report.department}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${report.room}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${report.system}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${ratingColor}">${report.rating}</span></td>
-                    <td class="px-6 py-4 text-sm text-gray-500" style="max-width: 200px; white-space: normal;">${report.comment}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${report.inspector}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dateStr}</td>
-                `;
-                reportTableBody.appendChild(tr);
-            });
-        }
-
+        // Экспорт использует данные, скачанные из БД
         exportCsvBtn.addEventListener('click', () => {
-            if (state.allReports.length === 0) {
+            if (!state.fetchedReports || state.fetchedReports.length === 0) {
                 alert("Нет данных для экспорта");
                 return;
             }
-            const headers = [T.tableHDepartment, T.tableHRoom, T.tableHSystem, T.tableHRating, T.tableHComment, T.tableHInspector, T.tableHDate];
-            const rows = state.allReports.map(report => {
-                const dateStr = report.createdAt.toLocaleString(lang);
+            const headers = [T.tableHDate, T.tableHDepartment, T.tableHRoom, T.tableHSystem, T.tableHRating, T.tableHComment, T.tableHPhoto, T.tableHInspector];
+            const rows = state.fetchedReports.map(report => {
                 const sanitizedComment = `"${(report.comment || '').replace(/"/g, '""')}"`;
-                return [report.department, report.room, report.system, report.rating, sanitizedComment, report.inspector, dateStr].join(";");
+                return [report.date, report.department, report.room, report.system, report.rating, sanitizedComment, report.photo, report.inspector].join(";");
             });
             let csvContent = "\uFEFF" + headers.join(";") + "\r\n" + rows.join("\r\n");
             const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
@@ -603,12 +689,7 @@
             document.body.removeChild(link);
         });
 
-        viewReportBtn.addEventListener('click', () => {
-            renderReportTable(state.allReports);
-            navigate('report');
-        });
-        
-        backToInspectionBtn.addEventListener('click', () => navigate('inspection'));
+        backToInspectionBtn.addEventListener('click', () => navigate('setup'));
 
         navigate('setup');
     </script>
