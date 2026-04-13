@@ -142,8 +142,8 @@
     </div>
 
     <script>
-        // Сюда мы вставляем ваш URL от Google Apps Script
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwaFGd9zu8sfIHKE9YMwufxsBPp-NMUt4feIs-m0Ku9kS0j0xLJnXcMR40yjR5C5AL9/exec";
+        // ВАЖНО: Вставьте сюда ваш НОВЫЙ URL после перепубликации скрипта
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxMN6s8ektwhHxuE_8xDz1ZaeqYyXaLyniwi_xFpbzVEjFEo_AUd6PybJk6nGKxmy7E/exec";
 
         const translations = {
             'ru': {
@@ -168,7 +168,7 @@
                 addBtn: "Добавить",
                 completeRoomBtn: "Завершить проверку комнаты",
                 reportTitle: "Дефектная ведомость",
-                reportSubtitle: "Системы с оценкой 1, 2 и 3, требующие внимания.",
+                reportSubtitle: "Системы с оценкой 1 и 2, требующие ремонта или замены.",
                 exportCsvBtn: "Экспорт в CSV",
                 backToInspectionBtn: "Назад к инспекции",
                 tableHDepartment: "Отделение",
@@ -187,7 +187,20 @@
                 headerDepartmentLabel: "Отделение:",
                 commentPlaceholder: "Добавить комментарий (необязательно)",
                 ratingExplanation: "ПАМЯТКА ПО ОЦЕНКАМ:\n\n4 - Хорошее состояние\n3 - Удовлетворительно\n2 - Требуется ремонт/восстановление\n1 - Требуется замена/капитальный ремонт",
-                standardSystems: ["Окна", "Двери", "Стены и потолок", "Кровати", "Электрооборудование", "Душ", "Туалет", "Краны", "Шкафы", "Тумбочки"]
+                standardSystems: ["Окна", "Двери", "Стены и потолок", "Кровати", "Электрооборудование", "Душ", "Туалет", "Краны", "Шкафы", "Тумбочки"],
+                // Словарь для перевода на иврит перед отправкой в БД
+                systemDbMap: {
+                    "Окна": "חלונות",
+                    "Двери": "דלתות",
+                    "Стены и потолок": "קירות ותקרה",
+                    "Кровати": "מיטות",
+                    "Электрооборудование": "חשמל",
+                    "Душ": "מקלחת",
+                    "Туалет": "שירותים",
+                    "Краны": "ברזים",
+                    "Шкафы": "ארונות",
+                    "Тумбочки": "שידות"
+                }
             }
         };
 
@@ -208,7 +221,6 @@
             });
         });
 
-        // allReports теперь хранится локально во время сессии, чтобы сразу видеть дефекты
         let state = { inspector: '', department: '', currentRoom: '', currentChecklist: new Map(), allReports: [] };
         const standardSystems = T.standardSystems;
 
@@ -247,7 +259,6 @@
             if (pages[pageName]) pages[pageName].classList.add('active');
         }
 
-        // Функция сжатия изображения перед отправкой
         function compressPhoto(file, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -255,7 +266,7 @@
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    const MAX_WIDTH = 800; // Сжимаем до 800px по ширине
+                    const MAX_WIDTH = 800;
                     let width = img.width;
                     let height = img.height;
 
@@ -267,7 +278,7 @@
                     canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    const base64String = canvas.toDataURL('image/jpeg', 0.6); // Качество 60%
+                    const base64String = canvas.toDataURL('image/jpeg', 0.6);
                     callback(base64String);
                 }
                 img.src = e.target.result;
@@ -328,7 +339,6 @@
             div.className = 'p-4 border rounded-lg bg-gray-50';
             div.dataset.system = systemName;
             
-            // Добавлена кнопка фотоаппарата (input type="file")
             div.innerHTML = `
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center">
                     <h4 class="text-md font-semibold text-gray-800 mb-2 sm:mb-0">${systemName}</h4>
@@ -363,7 +373,6 @@
                 state.currentChecklist.get(systemName).comment = e.target.value;
             });
 
-            // Обработка загрузки фотографии
             const photoInput = div.querySelector('.photo-input');
             const photoPreview = div.querySelector('.photo-preview');
             photoInput.addEventListener('change', (e) => {
@@ -393,11 +402,9 @@
             }
         });
         
-        // Отправка данных в Google Таблицу
         completeRoomBtn.addEventListener('click', async () => {
             showLoader(T.savingText);
             
-            // Формируем пакет данных (payload)
             const payload = {
                 inspector: state.inspector,
                 department: state.department,
@@ -406,23 +413,26 @@
             };
 
             for (let [system, data] of state.currentChecklist.entries()) {
+                // Переводим название на иврит с помощью словаря. Если это нестандартная система (ее нет в словаре) - оставляем как есть
+                const hebrewName = T.systemDbMap[system] || system;
+
                 payload.items.push({
-                    name: system,
+                    name: hebrewName, 
                     score: data.rating,
                     comment: data.comment,
                     photoBase64: data.photoBase64
                 });
 
-                // Если оценка 1, 2 или 3, локально сохраняем в дефектную ведомость
-                if (data.rating <= 3) {
+                // ИСПРАВЛЕНО: В локальный отчет (UI) попадают только 1 и 2. В интерфейсе оставляем русское название (system)
+                if (data.rating <= 2) {
                     state.allReports.push({
                         department: state.department,
                         room: state.currentRoom,
-                        system: system,
+                        system: system, 
                         rating: data.rating,
                         comment: data.comment,
                         inspector: state.inspector,
-                        createdAt: new Date() // Локальное время для таблицы отчетов
+                        createdAt: new Date()
                     });
                 }
             }
@@ -430,7 +440,7 @@
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
-                    body: JSON.stringify(payload) // Без заголовка 'Content-Type': 'application/json', чтобы избежать проблем с CORS
+                    body: JSON.stringify(payload) 
                 });
 
                 const result = await response.json();
@@ -459,7 +469,6 @@
                 return;
             }
             
-            // Сортируем: сначала самые свежие записи
             const sortedReports = [...reports].sort((a, b) => b.createdAt - a.createdAt);
 
             sortedReports.forEach(report => {
@@ -467,7 +476,6 @@
                 let ratingColor = 'bg-green-100 text-green-800';
                 if (report.rating === 1) ratingColor = 'bg-red-100 text-red-800';
                 else if (report.rating === 2) ratingColor = 'bg-orange-100 text-orange-800';
-                else if (report.rating === 3) ratingColor = 'bg-yellow-100 text-yellow-800';
 
                 const dateStr = report.createdAt.toLocaleString(lang);
                 
