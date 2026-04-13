@@ -84,6 +84,13 @@
                     <input type="text" id="roomName" class="flex-1 block w-full min-w-0 rounded-none rounded-l-md px-3 py-2 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" data-lang-key="roomNamePlaceholder">
                     <button id="startRoomInspectionBtn" class="inline-flex items-center px-4 py-2 border border-l-0 border-indigo-600 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700" data-lang-key="startBtn"></button>
                 </div>
+                
+                <div class="mt-8 border-t pt-6 flex flex-col sm:flex-row justify-between items-center bg-red-50 p-4 rounded-lg">
+                    <p class="text-sm text-red-800 font-medium mb-3 sm:mb-0"><i class="fas fa-exclamation-circle mr-2"></i>Проверили все помещения?</p>
+                    <button id="finishDeptBtn" class="w-full sm:w-auto bg-red-600 text-white py-2 px-6 rounded-md shadow-sm hover:bg-red-700 font-bold transition-colors">
+                        <span data-lang-key="finishDeptBtn"></span>
+                    </button>
+                </div>
             </div>
             
             <div id="systemsCheckBlock" class="hidden">
@@ -105,6 +112,25 @@
         </div>
     </div>
     
+    <div id="summaryPage" class="page p-4 md:p-8 max-w-3xl mx-auto">
+        <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-indigo-500">
+            <div class="text-center mb-6">
+                <i class="fas fa-clipboard-check fa-4x text-green-500 mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-800"><span data-lang-key="summaryTitle"></span> <span id="summaryDeptName" class="text-indigo-600"></span></h2>
+            </div>
+            
+            <div class="bg-red-50 border border-red-200 p-5 rounded-lg mb-8 shadow-inner">
+                <h3 class="text-lg font-bold text-red-800 mb-4" data-lang-key="summaryReplaceTitle"></h3>
+                <ul id="replacementList" class="list-disc pl-5 text-red-700 font-semibold text-lg space-y-2"></ul>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+                <button id="summaryToReportBtn" class="bg-blue-600 text-white py-3 px-6 rounded-md shadow-sm hover:bg-blue-700 font-medium">Перейти к Дефектной ведомости</button>
+                <button id="closeSummaryBtn" class="bg-gray-500 text-white py-3 px-6 rounded-md shadow-sm hover:bg-gray-600 font-medium">Начать новую проверку (Выход)</button>
+            </div>
+        </div>
+    </div>
+
     <div id="reportPage" class="page p-4 md:p-8">
         <div class="bg-white p-6 rounded-xl shadow-md max-w-7xl mx-auto">
             <div class="flex justify-between items-center mb-4 border-b pb-4">
@@ -142,7 +168,7 @@
     </div>
 
     <script>
-        // ВАЖНО: Вставьте сюда ваш НОВЫЙ URL после перепубликации скрипта
+        // ВАЖНО: Вставьте сюда ваш URL
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxMN6s8ektwhHxuE_8xDz1ZaeqYyXaLyniwi_xFpbzVEjFEo_AUd6PybJk6nGKxmy7E/exec";
 
         const translations = {
@@ -167,6 +193,11 @@
                 customSystemPlaceholder: "Например, кондиционер",
                 addBtn: "Добавить",
                 completeRoomBtn: "Завершить проверку комнаты",
+                finishDeptBtn: "Закончить проверку отделения",
+                finishDeptConfirm: "ВНИМАНИЕ!\n\nВы уверены, что проверили ВСЕ помещения в этом отделении?\nПосле подтверждения будет сформирован итоговый список элементов на замену.",
+                summaryTitle: "Итог по отделению:",
+                summaryReplaceTitle: "Вам необходимо взять со склада для замены (Оценка 1):",
+                summaryEmpty: "Замен не требуется. Всё исправно!",
                 reportTitle: "Дефектная ведомость",
                 reportSubtitle: "Системы с оценкой 1 и 2, требующие ремонта или замены.",
                 exportCsvBtn: "Экспорт в CSV",
@@ -188,7 +219,6 @@
                 commentPlaceholder: "Добавить комментарий (необязательно)",
                 ratingExplanation: "ПАМЯТКА ПО ОЦЕНКАМ:\n\n4 - Хорошее состояние\n3 - Удовлетворительно\n2 - Требуется ремонт/восстановление\n1 - Требуется замена/капитальный ремонт",
                 standardSystems: ["Окна", "Двери", "Стены и потолок", "Кровати", "Электрооборудование", "Душ", "Туалет", "Краны", "Шкафы", "Тумбочки"],
-                // Словарь для перевода на иврит перед отправкой в БД
                 systemDbMap: {
                     "Окна": "חלונות",
                     "Двери": "דלתות",
@@ -224,7 +254,14 @@
         let state = { inspector: '', department: '', currentRoom: '', currentChecklist: new Map(), allReports: [] };
         const standardSystems = T.standardSystems;
 
-        const pages = { setup: document.getElementById('setupPage'), inspection: document.getElementById('inspectionPage'), report: document.getElementById('reportPage'), loading: document.getElementById('loading-overlay') };
+        const pages = { 
+            setup: document.getElementById('setupPage'), 
+            inspection: document.getElementById('inspectionPage'), 
+            report: document.getElementById('reportPage'), 
+            summary: document.getElementById('summaryPage'), // Добавлена страница итогов
+            loading: document.getElementById('loading-overlay') 
+        };
+        
         const loadingText = document.getElementById('loadingText');
         const inspectorNameInput = document.getElementById('inspectorName');
         const departmentInput = document.getElementById('department');
@@ -233,6 +270,7 @@
         const showRatingHintBtn = document.getElementById('showRatingHintBtn');
         const roomNameInput = document.getElementById('roomName');
         const startRoomInspectionBtn = document.getElementById('startRoomInspectionBtn');
+        const finishDeptBtn = document.getElementById('finishDeptBtn');
         const systemsCheckBlock = document.getElementById('systemsCheckBlock');
         const roomSelectionBlock = document.getElementById('roomSelectionBlock');
         const systemsList = document.getElementById('systemsList');
@@ -244,6 +282,12 @@
         const reportTableBody = document.getElementById('reportTableBody');
         const customSystemNameInput = document.getElementById('customSystemName');
         const addCustomSystemBtn = document.getElementById('addCustomSystemBtn');
+        
+        // Элементы страницы итогов
+        const summaryDeptName = document.getElementById('summaryDeptName');
+        const replacementList = document.getElementById('replacementList');
+        const summaryToReportBtn = document.getElementById('summaryToReportBtn');
+        const closeSummaryBtn = document.getElementById('closeSummaryBtn');
 
         function showLoader(text = T.loadingText) {
             loadingText.textContent = text;
@@ -322,6 +366,55 @@
             systemsCheckBlock.classList.remove('hidden');
             roomNameInput.value = '';
             checkIfRoomComplete();
+        });
+
+        // ЛОГИКА ЗАВЕРШЕНИЯ ПРОВЕРКИ ОТДЕЛЕНИЯ
+        finishDeptBtn.addEventListener('click', () => {
+            if (confirm(T.finishDeptConfirm)) {
+                generateSummary();
+            }
+        });
+
+        function generateSummary() {
+            summaryDeptName.textContent = state.department;
+            replacementList.innerHTML = '';
+            
+            // Фильтруем только те элементы, где оценка = 1 (Замена) для текущего отделения
+            const toReplace = state.allReports.filter(r => r.rating === 1 && r.department === state.department);
+            
+            if (toReplace.length === 0) {
+                replacementList.innerHTML = `<li class="text-green-600 list-none"><i class="fas fa-check-circle mr-2"></i>${T.summaryEmpty}</li>`;
+            } else {
+                // Подсчет количества одинаковых систем
+                const tally = toReplace.reduce((acc, curr) => {
+                    acc[curr.system] = (acc[curr.system] || 0) + 1;
+                    return acc;
+                }, {});
+                
+                // Вывод списка
+                for (const [system, count] of Object.entries(tally)) {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${system}</span>: <span class="font-bold ml-2">${count} шт.</span>`;
+                    replacementList.appendChild(li);
+                }
+            }
+            
+            navigate('summary');
+        }
+
+        summaryToReportBtn.addEventListener('click', () => {
+            renderReportTable(state.allReports);
+            navigate('report');
+        });
+
+        closeSummaryBtn.addEventListener('click', () => {
+            // Очищаем сессию для новой проверки
+            state.department = '';
+            state.currentRoom = '';
+            state.allReports = [];
+            departmentInput.value = '';
+            roomNameInput.value = '';
+            navigate('setup');
         });
 
         function renderSystemsList(systems) {
@@ -413,7 +506,6 @@
             };
 
             for (let [system, data] of state.currentChecklist.entries()) {
-                // Переводим название на иврит с помощью словаря. Если это нестандартная система (ее нет в словаре) - оставляем как есть
                 const hebrewName = T.systemDbMap[system] || system;
 
                 payload.items.push({
@@ -423,7 +515,6 @@
                     photoBase64: data.photoBase64
                 });
 
-                // ИСПРАВЛЕНО: В локальный отчет (UI) попадают только 1 и 2. В интерфейсе оставляем русское название (system)
                 if (data.rating <= 2) {
                     state.allReports.push({
                         department: state.department,
@@ -446,7 +537,6 @@
                 const result = await response.json();
                 
                 if (result.status === "success") {
-                    alert(T.alertRoomReportSaved(state.currentRoom));
                     state.currentRoom = '';
                     state.currentChecklist.clear();
                     systemsCheckBlock.classList.add('hidden');
