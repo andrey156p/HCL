@@ -14,7 +14,6 @@
         .rating-btn.selected { border-width: 3px; border-color: #000; }
         .loader-overlay { background: rgba(255,255,255,0.8); z-index: 100; }
         
-        /* Стили для красивого лоадера */
         .loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #4f46e5;
@@ -41,7 +40,7 @@
             <div class="text-center mb-6">
                 <i class="fas fa-hospital-user fa-3x text-indigo-500"></i>
                 <h1 class="text-2xl font-bold text-gray-800 mt-2">Инспекция Систем</h1>
-                <p class="text-gray-500">Начало новой проверки</p>
+                <p class="text-gray-500">Регистрация неисправностей</p>
             </div>
             
             <div class="space-y-4">
@@ -58,6 +57,9 @@
             <div class="mt-8 space-y-3">
                 <button onclick="startInspection()" class="w-full bg-indigo-600 text-white py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                     Начать инспекцию
+                </button>
+                <button onclick="showRatingHint()" class="w-full bg-gray-100 text-gray-700 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-info-circle mr-1"></i> Памятка по оценкам
                 </button>
             </div>
         </div>
@@ -90,12 +92,12 @@
                     </div>
 
                 <button onclick="addIssueRow()" class="w-full border-2 border-dashed border-indigo-300 text-indigo-600 bg-indigo-50 py-3 px-4 rounded-lg mb-6 hover:bg-indigo-100 transition-colors font-medium flex justify-center items-center">
-                    <i class="fas fa-plus-circle mr-2 text-lg"></i> Добавить замечание
+                    <i class="fas fa-plus-circle mr-2 text-lg"></i> Добавить дефект / замечание
                 </button>
 
                 <div class="flex justify-end">
                     <button id="saveRoomBtn" onclick="saveRoomData()" class="w-full sm:w-auto bg-green-600 text-white py-3 px-6 rounded-md shadow-sm hover:bg-green-700 font-bold transition-colors">
-                        Сохранить проверку комнаты
+                        Сохранить помещение
                     </button>
                 </div>
             </div>
@@ -121,19 +123,20 @@
             <button onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 bg-white text-red-500 w-8 h-8 rounded-full shadow border flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors z-10" title="Удалить"><i class="fas fa-times"></i></button>
             
             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Что сломано?</label>
-            <select class="system-select w-full p-2 mb-4 rounded-md bg-gray-50 border border-gray-300 font-semibold text-gray-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+            <select class="system-select w-full p-2 mb-2 rounded-md bg-gray-50 border border-gray-300 font-semibold text-gray-800 focus:ring-2 focus:ring-indigo-500 outline-none" onchange="toggleCustomInput(this)">
                 </select>
             
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-2 text-center">Оценка состояния</label>
-            <div class="flex gap-2 mb-4 justify-center">
+            <input type="text" class="custom-system-input hidden w-full p-2 mb-4 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Впишите название или объект...">
+            
+            <label class="block text-xs font-bold text-gray-500 uppercase mt-2 mb-2 text-center">Оценка состояния</label>
+            <div class="rating-block flex gap-3 mb-4 justify-center">
                 <button data-v="1" class="rb w-12 h-12 rounded-full bg-red-500 text-white font-bold shadow-sm transition-transform transform hover:scale-105" onclick="setRating(this, 1)">1</button>
                 <button data-v="2" class="rb w-12 h-12 rounded-full bg-orange-500 text-white font-bold shadow-sm transition-transform transform hover:scale-105" onclick="setRating(this, 2)">2</button>
                 <button data-v="3" class="rb w-12 h-12 rounded-full bg-yellow-500 text-white font-bold shadow-sm transition-transform transform hover:scale-105" onclick="setRating(this, 3)">3</button>
-                <button data-v="4" class="rb w-12 h-12 rounded-full bg-green-500 text-white font-bold shadow-sm transition-transform transform hover:scale-105" onclick="setRating(this, 4)">4</button>
             </div>
             
             <div class="flex gap-2 items-start">
-                <textarea class="comment-text flex-1 p-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none" rows="2" placeholder="Опишите недочёт..."></textarea>
+                <textarea class="comment-text flex-1 p-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none" rows="2" placeholder="Опишите недочёт (обязательно)..."></textarea>
                 <label class="p-3 bg-gray-50 border border-gray-300 rounded-md cursor-pointer flex flex-col items-center justify-center w-16 h-[74px] hover:bg-gray-100 transition-colors">
                     <i class="fas fa-camera text-gray-500 text-xl"></i>
                     <span class="text-[10px] text-gray-500 mt-1 font-medium">Фото</span>
@@ -145,7 +148,6 @@
     </template>
 
     <script>
-        // ВОТ ВАША РАБОЧАЯ ССЫЛКА НА GOOGLE APPS SCRIPT
         const API_URL = "https://script.google.com/macros/s/AKfycbxMN6s8ektwhHxuE_8xDz1ZaeqYyXaLyniwi_xFpbzVEjFEo_AUd6PybJk6nGKxmy7E/exec";
         
         let state = { 
@@ -153,6 +155,10 @@
             inspectedRooms: [], systemsList: [], 
             stats: { critical: 0, replace: 0 } 
         };
+
+        function showRatingHint() {
+            alert("ПАМЯТКА ПО ОЦЕНКАМ:\n\n3 - Удовлетворительно / Мелкий дефект\n2 - Требуется ремонт / Восстановление\n1 - Требуется срочная замена / Капитальный ремонт");
+        }
 
         async function startInspection() {
             state.inspector = document.getElementById('inspectorName').value.trim();
@@ -170,7 +176,6 @@
                 if (data.systems && data.systems.length > 0) {
                     state.systemsList = data.systems.filter(s => s !== "");
                 } else {
-                    alert("Внимание: Список систем пуст. Убедитесь, что в таблице на листе 'הגדרות' в колонке А есть названия систем.");
                     state.systemsList = ["Окно", "Дверь", "Стена", "Электрика", "Сантехника"];
                 }
                 
@@ -197,14 +202,27 @@
             const temp = document.getElementById('issueTemplate').content.cloneNode(true);
             const select = temp.querySelector('.system-select');
             
+            let optionsHTML = '<option value="" disabled selected>Выберите из списка...</option>';
             state.systemsList.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s; 
-                opt.innerText = s;
-                select.appendChild(opt);
+                optionsHTML += `<option value="${s}">${s}</option>`;
             });
+            optionsHTML += '<option value="OTHER">🔧 Другое (вписать вручную)...</option>';
             
+            select.innerHTML = optionsHTML;
             document.getElementById('issuesList').appendChild(temp);
+        }
+
+        function toggleCustomInput(selectElem) {
+            const customInput = selectElem.parentElement.querySelector('.custom-system-input');
+            if (selectElem.value === 'OTHER') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+                selectElem.classList.replace('mb-4', 'mb-2'); // Немного ужимаем отступы
+            } else {
+                customInput.classList.add('hidden');
+                selectElem.classList.replace('mb-2', 'mb-4');
+                customInput.value = ''; // Очищаем, если передумали
+            }
         }
 
         function setRating(btn, val) {
@@ -263,16 +281,29 @@
 
             const items = [];
             for(let row of rows) {
-                const systemName = row.querySelector('.system-select').value;
-                const ratingBlock = row.querySelector('.flex.gap-2.mb-4.justify-center');
+                let systemName = row.querySelector('.system-select').value;
+                
+                if(!systemName) {
+                    return alert("Пожалуйста, выберите систему из списка!");
+                }
+                
+                // Если выбрано "Другое", берем текст из ручного ввода
+                if(systemName === 'OTHER') {
+                    systemName = row.querySelector('.custom-system-input').value.trim();
+                    if(!systemName) {
+                        return alert("Пожалуйста, впишите название нестандартной поломки!");
+                    }
+                }
+
+                const ratingBlock = row.querySelector('.rating-block');
                 const rating = ratingBlock ? ratingBlock.dataset.val : null;
                 const comment = row.querySelector('.comment-text').value.trim();
                 
                 if(!rating) {
-                    return alert(`Пожалуйста, выберите оценку (1-4) для системы: ${systemName}`);
+                    return alert(`Пожалуйста, выберите оценку для: ${systemName}`);
                 }
-                if(rating < 4 && !comment) {
-                    return alert(`Пожалуйста, опишите причину поломки для системы: ${systemName}`);
+                if(!comment) {
+                    return alert(`Пожалуйста, опишите причину поломки для: ${systemName}`);
                 }
                 
                 items.push({
@@ -314,9 +345,8 @@
             if(!state.inspectedRooms.includes(state.currentRoom)) {
                 state.inspectedRooms.push(state.currentRoom);
                 
-                // Красивое отображение бейджиков
                 const listDiv = document.getElementById('inspectedRoomsList');
-                if(state.inspectedRooms.length === 1) listDiv.innerHTML = ''; // убираем текст "пока пусто"
+                if(state.inspectedRooms.length === 1) listDiv.innerHTML = ''; 
                 
                 const badge = document.createElement('span');
                 badge.className = "bg-white border border-indigo-200 text-indigo-700 px-3 py-1 rounded-full shadow-sm";
