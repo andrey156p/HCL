@@ -32,34 +32,34 @@
 
     <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center hidden loader-overlay">
         <div class="loader"></div>
-        <p class="mt-4 text-gray-600 font-medium">Синхронизация с базой...</p>
+        <p class="mt-4 text-gray-600 font-medium" data-i18n="syncText">Синхронизация с базой...</p>
     </div>
 
     <div id="setupPage" class="page active p-4 md:p-8 max-w-lg mx-auto mt-10">
         <div class="bg-white p-6 rounded-xl shadow-md">
             <div class="text-center mb-6">
                 <i class="fas fa-hospital-user fa-3x text-indigo-500"></i>
-                <h1 class="text-2xl font-bold text-gray-800 mt-2">Инспекция Систем</h1>
-                <p class="text-gray-500">Регистрация неисправностей</p>
+                <h1 class="text-2xl font-bold text-gray-800 mt-2" data-i18n="title">Инспекция Систем</h1>
+                <p class="text-gray-500" data-i18n="subtitle">Регистрация неисправностей</p>
             </div>
             
             <div class="space-y-4">
                 <div>
-                    <label for="inspectorName" class="block text-sm font-medium text-gray-700">ФИО проверяющего</label>
-                    <input type="text" id="inspectorName" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <label for="inspectorName" class="block text-sm font-medium text-gray-700" data-i18n="inspectorLabel">ФИО проверяющего</label>
+                    <input type="text" id="inspectorName" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
                 <div>
-                    <label for="department" class="block text-sm font-medium text-gray-700">Отделение (например, A 1)</label>
-                    <input type="text" id="department" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <label for="department" class="block text-sm font-medium text-gray-700" data-i18n="deptLabel">Отделение (например, A 1)</label>
+                    <input type="text" id="department" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
             </div>
 
             <div class="mt-8 space-y-3">
-                <button onclick="startInspection()" class="w-full bg-indigo-600 text-white py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                <button onclick="startInspection()" class="w-full bg-indigo-600 text-white py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors" data-i18n="startBtn">
                     Начать инспекцию
                 </button>
                 <button onclick="showRatingHint()" class="w-full bg-gray-100 text-gray-700 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium hover:bg-gray-200 transition-colors">
-                    <i class="fas fa-info-circle mr-1"></i> Памятка по оценкам
+                    <i class="fas fa-info-circle mx-1"></i> <span data-i18n="hintBtn">Памятка по оценкам</span>
                 </button>
             </div>
         </div>
@@ -69,34 +69,34 @@
         <div class="bg-white p-6 rounded-xl shadow-md mb-6">
             <div class="flex justify-between items-center mb-4 border-b pb-4">
                 <div>
-                    <h2 class="text-xl font-bold text-gray-800">Проверка помещений</h2>
+                    <h2 class="text-xl font-bold text-gray-800" data-i18n="roomCheckTitle">Проверка помещений</h2>
                     <p class="text-sm text-gray-500" id="headerInfo"></p>
                 </div>
-                <button onclick="location.reload()" class="bg-gray-200 text-gray-600 py-2 px-4 rounded-md shadow-sm hover:bg-gray-300 transition-colors" title="Выйти">
-                    <i class="fas fa-sign-out-alt"></i> Выход
+                <button onclick="location.reload()" class="bg-gray-200 text-gray-600 py-2 px-4 rounded-md shadow-sm hover:bg-gray-300 transition-colors" title="Выход">
+                    <i class="fas fa-sign-out-alt mx-1"></i> <span data-i18n="exitBtn">Выход</span>
                 </button>
             </div>
             
             <div id="roomInputBlock">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Номер комнаты / Название помещения:</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="roomLabel">Номер комнаты / Название помещения:</label>
                 <div class="mt-1 flex rounded-md shadow-sm">
-                    <input type="text" id="roomName" class="flex-1 block w-full min-w-0 rounded-none rounded-l-md px-3 py-2 border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Напр: Палата 101 или Склад">
-                    <button onclick="openRoom()" class="inline-flex items-center px-6 py-2 border border-l-0 border-indigo-600 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 font-bold transition-colors">ОК</button>
+                    <input type="text" id="roomName" class="flex-1 block w-full min-w-0 rounded-none px-3 py-2 border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" data-i18n-ph="roomPlaceholder" placeholder="Напр: Палата 101 или Склад">
+                    <button onclick="openRoom()" class="inline-flex items-center px-6 py-2 border border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700 font-bold transition-colors" data-i18n="okBtn">ОК</button>
                 </div>
             </div>
 
             <div id="activeRoomBlock" class="hidden mt-6 pt-4 border-t">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4">Помещение: <span id="currentRoomDisplay" class="text-indigo-600 font-bold"></span></h3>
+                <h3 class="text-lg font-semibold text-gray-700 mb-4"><span data-i18n="roomPrefix">Помещение:</span> <span id="currentRoomDisplay" class="text-indigo-600 font-bold"></span></h3>
                 
                 <div id="issuesList" class="space-y-5 mb-6">
                     </div>
 
                 <button onclick="addIssueRow()" class="w-full border-2 border-dashed border-indigo-300 text-indigo-600 bg-indigo-50 py-3 px-4 rounded-lg mb-6 hover:bg-indigo-100 transition-colors font-medium flex justify-center items-center">
-                    <i class="fas fa-plus-circle mr-2 text-lg"></i> Добавить дефект / замечание
+                    <i class="fas fa-plus-circle mx-2 text-lg"></i> <span data-i18n="addIssueBtn">Добавить дефект / замечание</span>
                 </button>
 
                 <div class="flex justify-end">
-                    <button id="saveRoomBtn" onclick="saveRoomData()" class="w-full sm:w-auto bg-green-600 text-white py-3 px-6 rounded-md shadow-sm hover:bg-green-700 font-bold transition-colors">
+                    <button id="saveRoomBtn" onclick="saveRoomData()" class="w-full sm:w-auto bg-green-600 text-white py-3 px-6 rounded-md shadow-sm hover:bg-green-700 font-bold transition-colors" data-i18n="saveRoomBtn">
                         Сохранить помещение
                     </button>
                 </div>
@@ -104,15 +104,15 @@
         </div>
 
         <div class="bg-indigo-50 p-5 rounded-xl shadow-sm border border-indigo-100 mb-8">
-            <h4 class="text-xs font-bold text-indigo-400 uppercase mb-3"><i class="fas fa-check-double mr-1"></i> Уже проверено в этом отделении:</h4>
+            <h4 class="text-xs font-bold text-indigo-400 uppercase mb-3"><i class="fas fa-check-double mx-1"></i> <span data-i18n="inspectedTitle">Уже проверено в этом отделении:</span></h4>
             <div id="inspectedRoomsList" class="flex flex-wrap gap-2 text-sm text-indigo-700 font-medium">
-                (пока пусто)
+                <span data-i18n="emptyList">(пока пусто)</span>
             </div>
         </div>
 
         <div class="border-t pt-6 flex flex-col sm:flex-row justify-between items-center bg-red-50 p-5 rounded-xl shadow-sm border border-red-100">
-            <p class="text-sm text-red-800 font-medium mb-4 sm:mb-0"><i class="fas fa-exclamation-circle mr-2 text-lg"></i>Проверили все помещения?</p>
-            <button onclick="finishDepartment()" class="w-full sm:w-auto bg-red-600 text-white py-3 px-6 rounded-md shadow-sm hover:bg-red-700 font-bold transition-colors">
+            <p class="text-sm text-red-800 font-medium mb-4 sm:mb-0"><i class="fas fa-exclamation-circle mx-2 text-lg"></i><span data-i18n="finishQuestion">Проверили все помещения?</span></p>
+            <button onclick="finishDepartment()" class="w-full sm:w-auto bg-red-600 text-white py-3 px-6 rounded-md shadow-sm hover:bg-red-700 font-bold transition-colors" data-i18n="finishBtn">
                 Завершить проверку отделения
             </button>
         </div>
@@ -122,13 +122,13 @@
         <div class="issue-row bg-white p-4 rounded-lg border border-gray-200 relative shadow-sm">
             <button onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 bg-white text-red-500 w-8 h-8 rounded-full shadow border flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors z-10" title="Удалить"><i class="fas fa-times"></i></button>
             
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Что сломано?</label>
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-1" data-i18n="whatBroken">Что сломано?</label>
             <select class="system-select w-full p-2 mb-2 rounded-md bg-gray-50 border border-gray-300 font-semibold text-gray-800 focus:ring-2 focus:ring-indigo-500 outline-none" onchange="toggleCustomInput(this)">
                 </select>
             
-            <input type="text" class="custom-system-input hidden w-full p-2 mb-4 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Впишите название или объект...">
+            <input type="text" class="custom-system-input hidden w-full p-2 mb-4 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none" data-i18n-ph="customPlaceholder" placeholder="Впишите название или объект...">
             
-            <label class="block text-xs font-bold text-gray-500 uppercase mt-2 mb-2 text-center">Оценка состояния</label>
+            <label class="block text-xs font-bold text-gray-500 uppercase mt-2 mb-2 text-center" data-i18n="ratingLabel">Оценка состояния</label>
             <div class="rating-block flex gap-3 mb-4 justify-center">
                 <button data-v="1" class="rb w-12 h-12 rounded-full bg-red-500 text-white font-bold shadow-sm transition-transform transform hover:scale-105" onclick="setRating(this, 1)">1</button>
                 <button data-v="2" class="rb w-12 h-12 rounded-full bg-orange-500 text-white font-bold shadow-sm transition-transform transform hover:scale-105" onclick="setRating(this, 2)">2</button>
@@ -136,20 +136,130 @@
             </div>
             
             <div class="flex gap-2 items-start">
-                <textarea class="comment-text flex-1 p-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none" rows="2" placeholder="Опишите недочёт (обязательно)..."></textarea>
+                <textarea class="comment-text flex-1 p-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none" rows="2" data-i18n-ph="commentPlaceholder" placeholder="Опишите недочёт (обязательно)..."></textarea>
                 <label class="p-3 bg-gray-50 border border-gray-300 rounded-md cursor-pointer flex flex-col items-center justify-center w-16 h-[74px] hover:bg-gray-100 transition-colors">
                     <i class="fas fa-camera text-gray-500 text-xl"></i>
-                    <span class="text-[10px] text-gray-500 mt-1 font-medium">Фото</span>
+                    <span class="text-[10px] text-gray-500 mt-1 font-medium" data-i18n="photoLabel">Фото</span>
                     <input type="file" accept="image/*" capture="environment" class="hidden photo-input" onchange="handlePhoto(this)">
                 </label>
             </div>
-            <div class="photo-indicator hidden text-xs text-green-600 font-bold mt-2"><i class="fas fa-check-circle mr-1"></i>Фотография прикреплена</div>
+            <div class="photo-indicator hidden text-xs text-green-600 font-bold mt-2"><i class="fas fa-check-circle mx-1"></i><span data-i18n="photoAdded">Фотография прикреплена</span></div>
         </div>
     </template>
 
     <script>
+        // ВОТ ВАША РАБОЧАЯ ССЫЛКА НА GOOGLE APPS SCRIPT
         const API_URL = "https://script.google.com/macros/s/AKfycbxMN6s8ektwhHxuE_8xDz1ZaeqYyXaLyniwi_xFpbzVEjFEo_AUd6PybJk6nGKxmy7E/exec";
         
+        // СЛОВАРЬ ПЕРЕВОДОВ
+        const dict = {
+            ru: {
+                syncText: "Синхронизация с базой...",
+                title: "Инспекция Систем",
+                subtitle: "Регистрация неисправностей",
+                inspectorLabel: "ФИО проверяющего",
+                deptLabel: "Отделение (например, A 1)",
+                startBtn: "Начать инспекцию",
+                hintBtn: "Памятка по оценкам",
+                roomCheckTitle: "Проверка помещений",
+                exitBtn: "Выход",
+                roomLabel: "Номер комнаты / Название помещения:",
+                roomPlaceholder: "Напр: Палата 101 или Склад",
+                okBtn: "ОК",
+                roomPrefix: "Помещение:",
+                addIssueBtn: "Добавить дефект / замечание",
+                saveRoomBtn: "Сохранить помещение",
+                inspectedTitle: "Уже проверено в этом отделении:",
+                emptyList: "(пока пусто)",
+                finishQuestion: "Проверили все помещения?",
+                finishBtn: "Завершить проверку отделения",
+                whatBroken: "Что сломано?",
+                selectDefault: "Выберите из списка...",
+                otherOption: "🔧 Другое (вписать вручную)...",
+                customPlaceholder: "Впишите название или объект...",
+                ratingLabel: "Оценка состояния",
+                commentPlaceholder: "Опишите недочёт (обязательно)...",
+                photoLabel: "Фото",
+                photoAdded: "Фотография прикреплена",
+                alertFill: "Пожалуйста, заполните ФИО и Отделение!",
+                alertRoom: "Введите номер или название помещения!",
+                alertSystem: "Пожалуйста, выберите систему из списка!",
+                alertCustom: "Пожалуйста, впишите название нестандартной поломки!",
+                alertRating: "Пожалуйста, выберите оценку для:",
+                alertComment: "Пожалуйста, опишите причину поломки для:",
+                alertNoRooms: "Вы не проверили ни одной комнаты!",
+                confirmFinish: "Вы уверены, что проверили все помещения?\nОтчет будет отправлен руководителю в Telegram.",
+                successFinish: "✅ Проверка успешно завершена! Отчет отправлен в Telegram.",
+                hintText: "ПАМЯТКА ПО ОЦЕНКАМ:\n\n3 - Удовлетворительно / Мелкий дефект\n2 - Требуется ремонт / Восстановление\n1 - Требуется срочная замена / Капитальный ремонт"
+            },
+            he: {
+                syncText: "מסנכרן נתונים...",
+                title: "בדיקת מערכות",
+                subtitle: "רישום תקלות במחלקה",
+                inspectorLabel: "שם הבודק",
+                deptLabel: "מחלקה (למשל, A 1)",
+                startBtn: "התחל בדיקה",
+                hintBtn: "תזכורת ציונים",
+                roomCheckTitle: "בדיקת חדרים",
+                exitBtn: "יציאה",
+                roomLabel: "מספר חדר / שם חלל:",
+                roomPlaceholder: "לדוגמה: חדר 101 או מחסן",
+                okBtn: "אישור",
+                roomPrefix: "חדר:",
+                addIssueBtn: "הוסף תקלה / הערה",
+                saveRoomBtn: "שמור נתוני חדר",
+                inspectedTitle: "כבר נבדקו במחלקה זו:",
+                emptyList: "(עדיין ריק)",
+                finishQuestion: "סיימת לבדוק את כל החדרים?",
+                finishBtn: "סיים בדיקת מחלקה",
+                whatBroken: "מה תקול?",
+                selectDefault: "בחר מהרשימה...",
+                otherOption: "🔧 אחר (הזן ידנית)...",
+                customPlaceholder: "הזן שם מערכת או פריט...",
+                ratingLabel: "דירוג מצב",
+                commentPlaceholder: "תאר את התקלה (חובה)...",
+                photoLabel: "תמונה",
+                photoAdded: "תמונה צורפה",
+                alertFill: "אנא מלא שם ומחלקה!",
+                alertRoom: "הזן מספר או שם חדר!",
+                alertSystem: "אנא בחר מערכת מהרשימה!",
+                alertCustom: "אנא הזן את שם התקלה הלא שגרתית!",
+                alertRating: "אנא בחר דירוג עבור:",
+                alertComment: "אנא תאר את סיבת התקלה עבור:",
+                alertNoRooms: "לא בדקת אף חדר!",
+                confirmFinish: "האם אתה בטוח שבדקת את כל החללים?\nהדוח יישלח למנהל בטלגרם.",
+                successFinish: "✅ הבדיקה הסתיימה בהצלחה! הדוח נשלח לטלגרם.",
+                hintText: "תזכורת ציונים:\n\n3 - סביר / פגם קל\n2 - דורש תיקון / שחזור\n1 - דורש החלפה דחופה / שיפוץ כללי"
+            }
+        };
+
+        // ЛОГИКА АВТОПЕРЕВОДА
+        const userLang = navigator.language || navigator.userLanguage;
+        const isHebrew = userLang.toLowerCase().startsWith('he');
+        const langCode = isHebrew ? 'he' : 'ru';
+        const T = dict[langCode];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            if (isHebrew) {
+                document.documentElement.dir = 'rtl';
+                document.documentElement.lang = 'he';
+                // Скругляем углы кнопок правильно для иврита
+                document.getElementById('roomName').classList.replace('rounded-l-md', 'rounded-r-md');
+                document.getElementById('roomName').nextElementSibling.classList.replace('rounded-r-md', 'rounded-l-md');
+            }
+            applyTranslations(document);
+        });
+
+        function applyTranslations(container) {
+            container.querySelectorAll('[data-i18n]').forEach(el => {
+                el.innerHTML = T[el.dataset.i18n];
+            });
+            container.querySelectorAll('[data-i18n-ph]').forEach(el => {
+                el.placeholder = T[el.dataset.i18n-ph];
+            });
+        }
+
+        // ОСНОВНОЙ КОД ПРИЛОЖЕНИЯ
         let state = { 
             inspector: '', department: '', currentRoom: '', 
             inspectedRooms: [], systemsList: [], 
@@ -157,7 +267,7 @@
         };
 
         function showRatingHint() {
-            alert("ПАМЯТКА ПО ОЦЕНКАМ:\n\n3 - Удовлетворительно / Мелкий дефект\n2 - Требуется ремонт / Восстановление\n1 - Требуется срочная замена / Капитальный ремонт");
+            alert(T.hintText);
         }
 
         async function startInspection() {
@@ -165,7 +275,7 @@
             state.department = document.getElementById('department').value.trim();
             
             if(!state.inspector || !state.department) {
-                return alert("Пожалуйста, заполните ФИО и Отделение!");
+                return alert(T.alertFill);
             }
             
             showLoader();
@@ -176,21 +286,21 @@
                 if (data.systems && data.systems.length > 0) {
                     state.systemsList = data.systems.filter(s => s !== "");
                 } else {
-                    state.systemsList = ["Окно", "Дверь", "Стена", "Электрика", "Сантехника"];
+                    state.systemsList = isHebrew ? ["חלון", "דלת", "קיר", "חשמל"] : ["Окно", "Дверь", "Стена", "Электрика"];
                 }
                 
-                document.getElementById('headerInfo').innerHTML = `<span class="font-semibold text-indigo-600">${state.inspector}</span> &nbsp;|&nbsp; Отделение: <span class="font-semibold text-indigo-600">${state.department}</span>`;
+                document.getElementById('headerInfo').innerHTML = `<span class="font-semibold text-indigo-600">${state.inspector}</span> &nbsp;|&nbsp; ${T.deptLabel.split(' ')[0]}: <span class="font-semibold text-indigo-600">${state.department}</span>`;
                 navigate('inspectionPage');
             } catch(e) { 
                 console.error(e);
-                alert("Ошибка соединения с базой данных! Проверьте интернет."); 
+                alert("Network error! / Ошибка сети!"); 
             }
             hideLoader();
         }
 
         function openRoom() {
             const name = document.getElementById('roomName').value.trim();
-            if(!name) return alert("Введите номер или название помещения!");
+            if(!name) return alert(T.alertRoom);
             
             state.currentRoom = name;
             document.getElementById('currentRoomDisplay').innerText = name;
@@ -200,13 +310,15 @@
 
         function addIssueRow() {
             const temp = document.getElementById('issueTemplate').content.cloneNode(true);
-            const select = temp.querySelector('.system-select');
+            applyTranslations(temp); // Переводим текст внутри новой карточки
             
-            let optionsHTML = '<option value="" disabled selected>Выберите из списка...</option>';
+            const select = temp.querySelector('.system-select');
+            let optionsHTML = `<option value="" disabled selected>${T.selectDefault}</option>`;
+            
             state.systemsList.forEach(s => {
                 optionsHTML += `<option value="${s}">${s}</option>`;
             });
-            optionsHTML += '<option value="OTHER">🔧 Другое (вписать вручную)...</option>';
+            optionsHTML += `<option value="OTHER">${T.otherOption}</option>`;
             
             select.innerHTML = optionsHTML;
             document.getElementById('issuesList').appendChild(temp);
@@ -217,11 +329,11 @@
             if (selectElem.value === 'OTHER') {
                 customInput.classList.remove('hidden');
                 customInput.focus();
-                selectElem.classList.replace('mb-4', 'mb-2'); // Немного ужимаем отступы
+                selectElem.classList.replace('mb-4', 'mb-2'); 
             } else {
                 customInput.classList.add('hidden');
                 selectElem.classList.replace('mb-2', 'mb-4');
-                customInput.value = ''; // Очищаем, если передумали
+                customInput.value = ''; 
             }
         }
 
@@ -284,14 +396,13 @@
                 let systemName = row.querySelector('.system-select').value;
                 
                 if(!systemName) {
-                    return alert("Пожалуйста, выберите систему из списка!");
+                    return alert(T.alertSystem);
                 }
                 
-                // Если выбрано "Другое", берем текст из ручного ввода
                 if(systemName === 'OTHER') {
                     systemName = row.querySelector('.custom-system-input').value.trim();
                     if(!systemName) {
-                        return alert("Пожалуйста, впишите название нестандартной поломки!");
+                        return alert(T.alertCustom);
                     }
                 }
 
@@ -300,10 +411,10 @@
                 const comment = row.querySelector('.comment-text').value.trim();
                 
                 if(!rating) {
-                    return alert(`Пожалуйста, выберите оценку для: ${systemName}`);
+                    return alert(`${T.alertRating} ${systemName}`);
                 }
                 if(!comment) {
-                    return alert(`Пожалуйста, опишите причину поломки для: ${systemName}`);
+                    return alert(`${T.alertComment} ${systemName}`);
                 }
                 
                 items.push({
@@ -332,11 +443,11 @@
                 if(result.status === "success") {
                     markRoomDone();
                 } else {
-                    alert("Ошибка сервера: " + result.message);
+                    alert("Server Error: " + result.message);
                 }
             } catch(e) {
                 console.error(e);
-                alert("Не удалось отправить данные. Проверьте интернет-соединение.");
+                alert("Network Error / Ошибка интернета");
             }
             hideLoader();
         }
@@ -361,10 +472,10 @@
 
         async function finishDepartment() {
             if(state.inspectedRooms.length === 0) {
-                return alert("Вы не проверили ни одной комнаты!");
+                return alert(T.alertNoRooms);
             }
             
-            if(!confirm("Вы уверены, что проверили все помещения?\nОтчет будет отправлен руководителю в Telegram.")) {
+            if(!confirm(T.confirmFinish)) {
                 return;
             }
             
@@ -383,11 +494,11 @@
                 });
                 
                 await res.json();
-                alert("✅ Проверка успешно завершена! Отчет отправлен в Telegram.");
+                alert(T.successFinish);
                 location.reload(); 
             } catch (e) {
                 console.error(e);
-                alert("Данные в таблицу сохранены, но отправить уведомление в Telegram не удалось.");
+                alert("Error sending to Telegram / Ошибка отправки в Telegram");
                 location.reload();
             }
         }
