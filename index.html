@@ -13,74 +13,367 @@
         .page.active { display: block; }
         .rating-btn.selected { border-width: 3px; border-color: #000; }
         .loader-overlay { background: rgba(255,255,255,0.8); z-index: 100; }
+        
+        /* Стили для красивого лоадера */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-100">
 
     <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center hidden loader-overlay">
-        <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 font-medium text-gray-700">Синхронизация с базой...</p>
+        <div class="loader"></div>
+        <p class="mt-4 text-gray-600 font-medium">Синхронизация с базой...</p>
     </div>
 
-    <div id="setupPage" class="page active p-6 max-w-md mx-auto">
-        <div class="bg-white p-6 rounded-2xl shadow-xl">
-            <h1 class="text-2xl font-bold text-center mb-6">🏥 Вход в систему</h1>
-            <input type="text" id="inspectorName" placeholder="ФИО инспектора" class="w-full mb-4 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
-            <input type="text" id="department" placeholder="Название отделения (например, A 1)" class="w-full mb-6 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
-            <button onclick="startInspection()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-colors">Начать инспекцию</button>
-        </div>
-    </div>
-
-    <div id="inspectionPage" class="page p-4 max-w-2xl mx-auto">
-        <div class="bg-white p-5 rounded-2xl shadow-lg mb-6">
-            <div class="flex justify-between items-center mb-4 border-b pb-4">
-                <h2 class="font-bold text-gray-800" id="headerInfo"></h2>
-                <button onclick="location.reload()" class="text-gray-400 hover:text-red-500 transition-colors" title="Выйти"><i class="fas fa-sign-out-alt fa-lg"></i></button>
+    <div id="setupPage" class="page active p-4 md:p-8 max-w-lg mx-auto mt-10">
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <div class="text-center mb-6">
+                <i class="fas fa-hospital-user fa-3x text-indigo-500"></i>
+                <h1 class="text-2xl font-bold text-gray-800 mt-2">Инспекция Систем</h1>
+                <p class="text-gray-500">Начало новой проверки</p>
             </div>
             
-            <div id="roomInputBlock">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Номер комнаты / Помещение:</label>
-                <div class="flex gap-2">
-                    <input type="text" id="roomName" class="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Напр: 101 или Склад">
-                    <button onclick="openRoom()" class="bg-indigo-600 text-white px-6 rounded-lg font-bold hover:bg-indigo-700">ОК</button>
+            <div class="space-y-4">
+                <div>
+                    <label for="inspectorName" class="block text-sm font-medium text-gray-700">ФИО проверяющего</label>
+                    <input type="text" id="inspectorName" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="department" class="block text-sm font-medium text-gray-700">Отделение (например, A 1)</label>
+                    <input type="text" id="department" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
             </div>
 
-            <div id="activeRoomBlock" class="hidden mt-4 pt-4 border-t">
-                <h3 class="font-bold text-indigo-600 mb-4 text-lg">Комната: <span id="currentRoomDisplay"></span></h3>
-                
-                <div id="issuesList" class="space-y-4 mb-6">
-                    </div>
-
-                <button onclick="addIssueRow()" class="w-full border-2 border-dashed border-indigo-300 text-indigo-600 p-3 rounded-lg mb-6 hover:bg-indigo-50 transition-colors">
-                    <i class="fas fa-plus-circle mr-2"></i>Добавить замечание
-                </button>
-
-                <button id="saveRoomBtn" onclick="saveRoomData()" class="w-full bg-green-600 text-white p-4 rounded-xl font-bold shadow-md hover:bg-green-700 transition-colors">
-                    Сохранить проверку комнаты
+            <div class="mt-8 space-y-3">
+                <button onclick="startInspection()" class="w-full bg-indigo-600 text-white py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    Начать инспекцию
                 </button>
             </div>
         </div>
+    </div>
 
-        <div class="bg-indigo-50 p-4 rounded-xl shadow-sm border border-indigo-100">
-            <h4 class="text-xs font-bold text-indigo-400 uppercase mb-2">Уже проверено:</h4>
+    <div id="inspectionPage" class="page p-4 md:p-8 max-w-4xl mx-auto">
+        <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+            <div class="flex justify-between items-center mb-4 border-b pb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">Проверка помещений</h2>
+                    <p class="text-sm text-gray-500" id="headerInfo"></p>
+                </div>
+                <button onclick="location.reload()" class="bg-gray-200 text-gray-600 py-2 px-4 rounded-md shadow-sm hover:bg-gray-300 transition-colors" title="Выйти">
+                    <i class="fas fa-sign-out-alt"></i> Выход
+                </button>
+            </div>
+            
+            <div id="roomInputBlock">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Номер комнаты / Название помещения:</label>
+                <div class="mt-1 flex rounded-md shadow-sm">
+                    <input type="text" id="roomName" class="flex-1 block w-full min-w-0 rounded-none rounded-l-md px-3 py-2 border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Напр: Палата 101 или Склад">
+                    <button onclick="openRoom()" class="inline-flex items-center px-6 py-2 border border-l-0 border-indigo-600 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 font-bold transition-colors">ОК</button>
+                </div>
+            </div>
+
+            <div id="activeRoomBlock" class="hidden mt-6 pt-4 border-t">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Помещение: <span id="currentRoomDisplay" class="text-indigo-600 font-bold"></span></h3>
+                
+                <div id="issuesList" class="space-y-5 mb-6">
+                    </div>
+
+                <button onclick="addIssueRow()" class="w-full border-2 border-dashed border-indigo-300 text-indigo-600 bg-indigo-50 py-3 px-4 rounded-lg mb-6 hover:bg-indigo-100 transition-colors font-medium flex justify-center items-center">
+                    <i class="fas fa-plus-circle mr-2 text-lg"></i> Добавить замечание
+                </button>
+
+                <div class="flex justify-end">
+                    <button id="saveRoomBtn" onclick="saveRoomData()" class="w-full sm:w-auto bg-green-600 text-white py-3 px-6 rounded-md shadow-sm hover:bg-green-700 font-bold transition-colors">
+                        Сохранить проверку комнаты
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-indigo-50 p-5 rounded-xl shadow-sm border border-indigo-100 mb-8">
+            <h4 class="text-xs font-bold text-indigo-400 uppercase mb-3"><i class="fas fa-check-double mr-1"></i> Уже проверено в этом отделении:</h4>
             <div id="inspectedRoomsList" class="flex flex-wrap gap-2 text-sm text-indigo-700 font-medium">
                 (пока пусто)
             </div>
         </div>
 
-        <button onclick="finishDepartment()" class="w-full mt-10 bg-red-500 text-white p-4 rounded-xl font-bold shadow-lg hover:bg-red-600 transition-colors">
-            <i class="fas fa-flag-checkered mr-2"></i>Завершить инспекцию отделения
-        </button>
+        <div class="border-t pt-6 flex flex-col sm:flex-row justify-between items-center bg-red-50 p-5 rounded-xl shadow-sm border border-red-100">
+            <p class="text-sm text-red-800 font-medium mb-4 sm:mb-0"><i class="fas fa-exclamation-circle mr-2 text-lg"></i>Проверили все помещения?</p>
+            <button onclick="finishDepartment()" class="w-full sm:w-auto bg-red-600 text-white py-3 px-6 rounded-md shadow-sm hover:bg-red-700 font-bold transition-colors">
+                Завершить проверку отделения
+            </button>
+        </div>
     </div>
 
     <template id="issueTemplate">
-        <div class="issue-row bg-gray-50 p-4 rounded-xl border border-gray-200 relative shadow-sm">
-            <button onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 bg-white text-red-500 w-8 h-8 rounded-full shadow border flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors z-10"><i class="fas fa-times"></i></button>
-            <select class="system-select w-full p-2 mb-3 rounded-lg bg-white border font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+        <div class="issue-row bg-white p-4 rounded-lg border border-gray-200 relative shadow-sm">
+            <button onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 bg-white text-red-500 w-8 h-8 rounded-full shadow border flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors z-10" title="Удалить"><i class="fas fa-times"></i></button>
+            
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Что сломано?</label>
+            <select class="system-select w-full p-2 mb-4 rounded-md bg-gray-50 border border-gray-300 font-semibold text-gray-800 focus:ring-2 focus:ring-indigo-500 outline-none">
                 </select>
-            <div class="flex gap-2 mb-3 justify-center">
-                <button data-v="1" class="rb w-12 h-12 rounded-full bg-red-500 text-white font-bold shadow-sm" onclick="setRating(this, 1)">1</button>
-                <button data-v="2" class="rb w-12 h-12 rounded-full bg-orange-500 text-white font-bold shadow-sm" onclick="setRating(this, 2)">2</button>
-                <button data-v="3" class="rb w-12 h-12 rounded-full bg-yellow-500 text-white font-bold shadow-sm" onclick="setRating(this, 3)">3</button>
-                <button data-v="
+            
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2 text-center">Оценка состояния</label>
+            <div class="flex gap-2 mb-4 justify-center">
+                <button data-v="1" class="rb w-12 h-12 rounded-full bg-red-500 text-white font-bold shadow-sm transition-transform transform hover:scale-105" onclick="setRating(this, 1)">1</button>
+                <button data-v="2" class="rb w-12 h-12 rounded-full bg-orange-500 text-white font-bold shadow-sm transition-transform transform hover:scale-105" onclick="setRating(this, 2)">2</button>
+                <button data-v="3" class="rb w-12 h-12 rounded-full bg-yellow-500 text-white font-bold shadow-sm transition-transform transform hover:scale-105" onclick="setRating(this, 3)">3</button>
+                <button data-v="4" class="rb w-12 h-12 rounded-full bg-green-500 text-white font-bold shadow-sm transition-transform transform hover:scale-105" onclick="setRating(this, 4)">4</button>
+            </div>
+            
+            <div class="flex gap-2 items-start">
+                <textarea class="comment-text flex-1 p-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none" rows="2" placeholder="Опишите недочёт..."></textarea>
+                <label class="p-3 bg-gray-50 border border-gray-300 rounded-md cursor-pointer flex flex-col items-center justify-center w-16 h-[74px] hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-camera text-gray-500 text-xl"></i>
+                    <span class="text-[10px] text-gray-500 mt-1 font-medium">Фото</span>
+                    <input type="file" accept="image/*" capture="environment" class="hidden photo-input" onchange="handlePhoto(this)">
+                </label>
+            </div>
+            <div class="photo-indicator hidden text-xs text-green-600 font-bold mt-2"><i class="fas fa-check-circle mr-1"></i>Фотография прикреплена</div>
+        </div>
+    </template>
+
+    <script>
+        // ВОТ ВАША РАБОЧАЯ ССЫЛКА НА GOOGLE APPS SCRIPT
+        const API_URL = "https://script.google.com/macros/s/AKfycbxMN6s8ektwhHxuE_8xDz1ZaeqYyXaLyniwi_xFpbzVEjFEo_AUd6PybJk6nGKxmy7E/exec";
+        
+        let state = { 
+            inspector: '', department: '', currentRoom: '', 
+            inspectedRooms: [], systemsList: [], 
+            stats: { critical: 0, replace: 0 } 
+        };
+
+        async function startInspection() {
+            state.inspector = document.getElementById('inspectorName').value.trim();
+            state.department = document.getElementById('department').value.trim();
+            
+            if(!state.inspector || !state.department) {
+                return alert("Пожалуйста, заполните ФИО и Отделение!");
+            }
+            
+            showLoader();
+            try {
+                const res = await fetch(`${API_URL}?action=getSettings`);
+                const data = await res.json();
+                
+                if (data.systems && data.systems.length > 0) {
+                    state.systemsList = data.systems.filter(s => s !== "");
+                } else {
+                    alert("Внимание: Список систем пуст. Убедитесь, что в таблице на листе 'הגדרות' в колонке А есть названия систем.");
+                    state.systemsList = ["Окно", "Дверь", "Стена", "Электрика", "Сантехника"];
+                }
+                
+                document.getElementById('headerInfo').innerHTML = `<span class="font-semibold text-indigo-600">${state.inspector}</span> &nbsp;|&nbsp; Отделение: <span class="font-semibold text-indigo-600">${state.department}</span>`;
+                navigate('inspectionPage');
+            } catch(e) { 
+                console.error(e);
+                alert("Ошибка соединения с базой данных! Проверьте интернет."); 
+            }
+            hideLoader();
+        }
+
+        function openRoom() {
+            const name = document.getElementById('roomName').value.trim();
+            if(!name) return alert("Введите номер или название помещения!");
+            
+            state.currentRoom = name;
+            document.getElementById('currentRoomDisplay').innerText = name;
+            document.getElementById('issuesList').innerHTML = ''; 
+            document.getElementById('activeRoomBlock').classList.remove('hidden');
+        }
+
+        function addIssueRow() {
+            const temp = document.getElementById('issueTemplate').content.cloneNode(true);
+            const select = temp.querySelector('.system-select');
+            
+            state.systemsList.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s; 
+                opt.innerText = s;
+                select.appendChild(opt);
+            });
+            
+            document.getElementById('issuesList').appendChild(temp);
+        }
+
+        function setRating(btn, val) {
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.rb').forEach(b => b.classList.remove('selected', 'ring-2', 'ring-offset-2', 'ring-gray-800'));
+            btn.classList.add('selected', 'ring-2', 'ring-offset-2', 'ring-gray-800');
+            parent.dataset.val = val;
+        }
+
+        async function handlePhoto(input) {
+            const file = input.files[0];
+            if(!file) return;
+            const indicator = input.closest('.issue-row').querySelector('.photo-indicator');
+            const labelIcon = input.closest('label').querySelector('i');
+            
+            labelIcon.className = "fas fa-spinner fa-spin text-indigo-500 text-xl";
+
+            const base64 = await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const MAX_WIDTH = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > MAX_WIDTH) {
+                            height = Math.round((height * MAX_WIDTH) / width);
+                            width = MAX_WIDTH;
+                        }
+                        
+                        canvas.width = width; 
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6)); 
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            input.dataset.base64 = base64;
+            labelIcon.className = "fas fa-camera text-green-500 text-xl";
+            indicator.classList.remove('hidden');
+        }
+
+        async function saveRoomData() {
+            const rows = document.querySelectorAll('.issue-row');
+            
+            if(rows.length === 0) {
+                markRoomDone();
+                return;
+            }
+
+            const items = [];
+            for(let row of rows) {
+                const systemName = row.querySelector('.system-select').value;
+                const ratingBlock = row.querySelector('.flex.gap-2.mb-4.justify-center');
+                const rating = ratingBlock ? ratingBlock.dataset.val : null;
+                const comment = row.querySelector('.comment-text').value.trim();
+                
+                if(!rating) {
+                    return alert(`Пожалуйста, выберите оценку (1-4) для системы: ${systemName}`);
+                }
+                if(rating < 4 && !comment) {
+                    return alert(`Пожалуйста, опишите причину поломки для системы: ${systemName}`);
+                }
+                
+                items.push({
+                    name: systemName,
+                    score: rating,
+                    comment: comment,
+                    photoBase64: row.querySelector('.photo-input').dataset.base64 || ""
+                });
+
+                if(rating <= 2) state.stats.critical++;
+                if(rating == 1) state.stats.replace++;
+            }
+
+            showLoader();
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        inspector: state.inspector, 
+                        department: state.department,
+                        room: state.currentRoom, 
+                        items: items
+                    })
+                });
+                const result = await res.json();
+                if(result.status === "success") {
+                    markRoomDone();
+                } else {
+                    alert("Ошибка сервера: " + result.message);
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Не удалось отправить данные. Проверьте интернет-соединение.");
+            }
+            hideLoader();
+        }
+
+        function markRoomDone() {
+            if(!state.inspectedRooms.includes(state.currentRoom)) {
+                state.inspectedRooms.push(state.currentRoom);
+                
+                // Красивое отображение бейджиков
+                const listDiv = document.getElementById('inspectedRoomsList');
+                if(state.inspectedRooms.length === 1) listDiv.innerHTML = ''; // убираем текст "пока пусто"
+                
+                const badge = document.createElement('span');
+                badge.className = "bg-white border border-indigo-200 text-indigo-700 px-3 py-1 rounded-full shadow-sm";
+                badge.innerText = state.currentRoom;
+                listDiv.appendChild(badge);
+            }
+            
+            document.getElementById('activeRoomBlock').classList.add('hidden');
+            document.getElementById('roomName').value = '';
+            window.scrollTo(0, 0); 
+        }
+
+        async function finishDepartment() {
+            if(state.inspectedRooms.length === 0) {
+                return alert("Вы не проверили ни одной комнаты!");
+            }
+            
+            if(!confirm("Вы уверены, что проверили все помещения?\nОтчет будет отправлен руководителю в Telegram.")) {
+                return;
+            }
+            
+            showLoader();
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "FINISH_DEPT",
+                        inspector: state.inspector, 
+                        department: state.department,
+                        criticalCount: state.stats.critical,
+                        replaceCount: state.stats.replace,
+                        roomsCount: state.inspectedRooms.length
+                    })
+                });
+                
+                await res.json();
+                alert("✅ Проверка успешно завершена! Отчет отправлен в Telegram.");
+                location.reload(); 
+            } catch (e) {
+                console.error(e);
+                alert("Данные в таблицу сохранены, но отправить уведомление в Telegram не удалось.");
+                location.reload();
+            }
+        }
+
+        function navigate(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+        
+        function showLoader() { 
+            document.getElementById('loader').classList.remove('hidden'); 
+        }
+        
+        function hideLoader() { 
+            document.getElementById('loader').classList.add('hidden'); 
+        }
+    </script>
+</body>
+</html>
