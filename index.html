@@ -250,12 +250,13 @@
             applyTranslations(document);
         });
 
+        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ПЕРЕВОДА (без dataset.i18n-ph)
         function applyTranslations(container) {
             container.querySelectorAll('[data-i18n]').forEach(el => {
                 el.innerHTML = T[el.dataset.i18n];
             });
             container.querySelectorAll('[data-i18n-ph]').forEach(el => {
-                el.placeholder = T[el.dataset.i18n-ph];
+                el.placeholder = T[el.getAttribute('data-i18n-ph')];
             });
         }
 
