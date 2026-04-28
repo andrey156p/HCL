@@ -159,7 +159,6 @@
             categories: {}, stats: { critical: 0, replace: 0 }, isRunning: false
         };
 
-        // --- УМНАЯ ВИБРАЦИЯ ---
         function vibrate(type = 'light') {
             if (!navigator.vibrate) return;
             try {
@@ -170,11 +169,7 @@
             } catch(e) {}
         }
 
-        // Обертка для системных предупреждений с вибрацией
-        function appAlert(message) {
-            vibrate('error');
-            alert(message);
-        }
+        function appAlert(message) { vibrate('error'); alert(message); }
 
         window.addEventListener('beforeunload', e => { if (state.isRunning) { e.preventDefault(); e.returnValue = ''; } });
 
@@ -356,9 +351,6 @@
                     
                     const actionText = rating == 1 ? T.btnReplace : T.btnRepair;
                     historyLog.push(`• ${sys} (${actionText})`);
-
-                    if(rating <= 2) state.stats.critical++;
-                    if(rating == 1) state.stats.replace++;
                 }
             } else {
                 historyLog.push(isHebrew ? "✅ הכל תקין" : "✅ Всё исправно");
@@ -380,7 +372,7 @@
                 document.getElementById('roomName').value = '';
                 document.getElementById('roomDetailsDisplay').classList.add('hidden'); 
                 window.scrollTo(0, 0); 
-                vibrate('success'); // Двойная вибрация при успешном сохранении!
+                vibrate('success');
             } catch(e) {
                 appAlert("Network error. Try again.");
             }
@@ -409,38 +401,70 @@
             if(badgeElement) badgeElement.classList.add('ring-2', 'ring-indigo-600');
 
             let html = `<h5 class="font-black text-indigo-700 mb-2 border-b border-indigo-200 pb-2">${T.detailsTitle} ${roomName}:</h5><ul class="space-y-1">`;
-            history.forEach(item => {
-                html += `<li class="text-sm font-bold text-gray-700">${item}</li>`;
-            });
+            history.forEach(item => { html += `<li class="text-sm font-bold text-gray-700">${item}</li>`; });
             html += `</ul>`;
             
             display.innerHTML = html;
             display.classList.remove('hidden');
         }
 
+        // --- НОВАЯ ФУНКЦИЯ ГЕНЕРАЦИИ ОТЧЕТА ---
         async function finishDepartment() {
             vibrate('light');
             if (!document.getElementById('activeRoomBlock').classList.contains('hidden')) {
                 return appAlert(T.alertUnsavedRoom);
             }
 
-            if(Object.keys(state.inspectedRooms).length === 0) return appAlert(isHebrew ? "לא נבדקו חדרים!" : "Вы не проверили ни одной комнаты!");
+            const roomKeys = Object.keys(state.inspectedRooms);
+            if(roomKeys.length === 0) return appAlert(isHebrew ? "לא נבדקו חדרים!" : "Вы не проверили ни одной комнаты!");
             if(!confirm(isHebrew ? "לסיים ולשלוח דיווח לטלגרם?" : "Завершить и отправить отчет в Telegram?")) return;
             
-            showLoader("Отправка...");
+            // Генерируем красивый текст для Telegram!
+            let report = isHebrew ? `🏥 *דוח מחלקה: ${state.department}*\n👤 בודק: ${state.inspector}\n\n` : `🏥 *Отчет по отделению: ${state.department}*\n👤 Инспектор: ${state.inspector}\n\n`;
+            let defects = [];
+            let okRooms = [];
+
+            for (const [room, issues] of Object.entries(state.inspectedRooms)) {
+                if (issues.length === 1 && issues[0].includes("✅")) {
+                    okRooms.push(room);
+                } else {
+                    let roomTitle = isHebrew ? `*חדר ${room}:*` : `*Пом. ${room}:*`;
+                    defects.push(`${roomTitle}\n${issues.join('\n')}`);
+                }
+            }
+
+            if (defects.length > 0) {
+                report += isHebrew ? `⚠️ *תקלות שנמצאו:*\n${defects.join('\n\n')}\n\n` : `⚠️ *ВЫЯВЛЕННЫЕ ДЕФЕКТЫ:*\n${defects.join('\n\n')}\n\n`;
+            } else {
+                report += isHebrew ? `✅ *כל החדרים שנבדקו תקינים!*\n\n` : `✅ *Все проверенные помещения исправны!*\n\n`;
+            }
+
+            report += isHebrew ? `📊 *סטטיסטיקה:*\nסה"כ נבדקו: ${roomKeys.length} חדרים.` : `📊 *Статистика:*\nВсего проверено: ${roomKeys.length} помещений.`;
+            if (okRooms.length > 0) {
+                report += isHebrew ? `\nללא הערות: ${okRooms.join(', ')}` : `\nБез замечаний: ${okRooms.join(', ')}`;
+            }
+
+            showLoader(isHebrew ? "שולח..." : "Отправка...");
             try {
-                await fetch(API_URL, {
+                const res = await fetch(API_URL, {
                     method: 'POST',
                     body: JSON.stringify({
-                        action: "FINISH_DEPT", inspector: state.inspector, department: state.department,
-                        criticalCount: state.stats.critical, replaceCount: state.stats.replace, roomsCount: Object.keys(state.inspectedRooms).length
+                        action: "FINISH_DEPT", 
+                        reportText: report // Отправляем готовый текст отчета!
                     })
                 });
+                const out = await res.json();
+                
+                if (out.status === "error") {
+                    hideLoader();
+                    return appAlert("ОШИБКА TELEGRAM: " + out.message);
+                }
+
                 vibrate('success');
-                alert("✅ Отчет отправлен!");
+                alert(isHebrew ? "✅ הדוח נשלח!" : "✅ Отчет отправлен!");
                 clearSession(); 
             } catch (e) {
-                appAlert("Ошибка интернета.");
+                appAlert(isHebrew ? "שגיאת רשת. נסה שוב." : "Ошибка интернета. Попробуйте еще раз.");
                 hideLoader();
             }
         }
