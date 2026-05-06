@@ -104,29 +104,44 @@
     </div>
 
     <template id="issueTemplate">
-        <div class="issue-row bg-white p-5 rounded-2xl border-l-4 border-indigo-500 shadow-md relative mb-4">
-            <button onclick="removeIssue(this)" class="absolute -top-3 -right-3 bg-red-100 text-red-600 w-10 h-10 rounded-full shadow-sm border border-red-200 flex items-center justify-center hover:bg-red-200"><i class="fas fa-trash-alt"></i></button>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-2" data-i18n="whatBroken">Что неисправно?</label>
-            <select class="system-select w-full p-4 mb-2 rounded-xl bg-gray-50 border border-gray-300 font-bold text-gray-900 text-lg focus:ring-2 focus:ring-indigo-500" onchange="toggleCustomInput(this)"></select>
-            <input type="text" class="custom-system-input hidden w-full p-4 mb-4 rounded-xl border border-gray-300 font-bold text-lg" data-i18n-ph="customPlaceholder" placeholder="Впишите название...">
-            <label class="block text-xs font-black text-gray-400 uppercase mt-4 mb-2" data-i18n="ratingLabel">Действие:</label>
-            <div class="rating-block flex flex-col sm:flex-row gap-3 mb-4">
-                <button data-v="2" class="status-btn flex-1 py-3 px-4 rounded-xl bg-orange-500 text-white font-bold text-lg shadow-sm flex items-center justify-center gap-2" onclick="setRating(this, 2)">
-                    <i class="fas fa-tools"></i> <span data-i18n="btnRepair">Ремонт</span>
-                </button>
-                <button data-v="1" class="status-btn flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-bold text-lg shadow-sm flex items-center justify-center gap-2" onclick="setRating(this, 1)">
-                    <i class="fas fa-sync-alt"></i> <span data-i18n="btnReplace">Замена</span>
+        <div class="issue-row bg-white rounded-2xl border-l-4 border-indigo-500 shadow-md relative mb-4 transition-all overflow-hidden">
+            
+            <div class="issue-header p-4 flex justify-between items-center cursor-pointer bg-indigo-50 hover:bg-indigo-100 transition-colors" onclick="toggleIssue(this, event)">
+                <div class="font-bold text-indigo-700 issue-title flex items-center">
+                    <i class="fas fa-edit mr-2 text-lg"></i> <span class="title-text" data-i18n="newIssueTitle">Редактирование...</span>
+                </div>
+                <button onclick="removeIssue(this, event)" class="text-red-500 w-8 h-8 rounded-full hover:bg-red-200 flex items-center justify-center bg-red-50"><i class="fas fa-trash-alt"></i></button>
+            </div>
+
+            <div class="issue-body p-5 border-t border-gray-100">
+                <label class="block text-xs font-black text-gray-400 uppercase mb-2" data-i18n="whatBroken">Что неисправно?</label>
+                <select class="system-select w-full p-4 mb-2 rounded-xl bg-gray-50 border border-gray-300 font-bold text-gray-900 text-lg focus:ring-2 focus:ring-indigo-500" onchange="toggleCustomInput(this); updateIssueTitle(this)"></select>
+                <input type="text" class="custom-system-input hidden w-full p-4 mb-4 rounded-xl border border-gray-300 font-bold text-lg" data-i18n-ph="customPlaceholder" placeholder="Впишите название..." oninput="updateIssueTitle(this)">
+                
+                <label class="block text-xs font-black text-gray-400 uppercase mt-4 mb-2" data-i18n="ratingLabel">Действие:</label>
+                <div class="rating-block flex flex-col sm:flex-row gap-3 mb-4">
+                    <button data-v="2" class="status-btn flex-1 py-3 px-4 rounded-xl bg-orange-500 text-white font-bold text-lg shadow-sm flex items-center justify-center gap-2" onclick="setRating(this, 2); updateIssueTitle(this)">
+                        <i class="fas fa-tools"></i> <span data-i18n="btnRepair">Ремонт</span>
+                    </button>
+                    <button data-v="1" class="status-btn flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-bold text-lg shadow-sm flex items-center justify-center gap-2" onclick="setRating(this, 1); updateIssueTitle(this)">
+                        <i class="fas fa-sync-alt"></i> <span data-i18n="btnReplace">Замена</span>
+                    </button>
+                </div>
+                
+                <div class="flex gap-2 items-start mt-4">
+                    <textarea class="comment-text flex-1 p-4 text-base border border-gray-300 rounded-xl font-medium focus:ring-2 focus:ring-indigo-500" rows="2" data-i18n-ph="commentPlaceholder" placeholder="Описание поломки (обязательно)..."></textarea>
+                    <label class="p-4 bg-gray-50 border border-gray-300 rounded-xl cursor-pointer flex flex-col items-center justify-center w-20 hover:bg-gray-100 h-full min-h-[90px]" onclick="vibrate('light')">
+                        <i class="fas fa-camera text-gray-400 text-2xl mb-1"></i>
+                        <span class="text-[10px] text-gray-500 font-bold uppercase" data-i18n="photoLabel">Фото</span>
+                        <input type="file" accept="image/*" capture="environment" class="hidden photo-input" onchange="handlePhoto(this)">
+                    </label>
+                </div>
+                <div class="photo-indicator hidden text-sm text-green-600 font-bold mt-3 bg-green-50 p-2 rounded-lg text-center"><i class="fas fa-check-circle mx-1"></i><span data-i18n="photoAdded">Фотография добавлена</span></div>
+                
+                <button onclick="collapseIssue(this)" class="collapse-btn w-full mt-5 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 flex items-center justify-center gap-2 transition-colors">
+                    <i class="fas fa-chevron-up"></i> <span data-i18n="collapseBtn">Готово (Свернуть)</span>
                 </button>
             </div>
-            <div class="flex gap-2 items-start mt-4">
-                <textarea class="comment-text flex-1 p-4 text-base border border-gray-300 rounded-xl font-medium focus:ring-2 focus:ring-indigo-500" rows="2" data-i18n-ph="commentPlaceholder" placeholder="Описание поломки (обязательно)..."></textarea>
-                <label class="p-4 bg-gray-50 border border-gray-300 rounded-xl cursor-pointer flex flex-col items-center justify-center w-20 hover:bg-gray-100 h-full min-h-[90px]" onclick="vibrate('light')">
-                    <i class="fas fa-camera text-gray-400 text-2xl mb-1"></i>
-                    <span class="text-[10px] text-gray-500 font-bold uppercase" data-i18n="photoLabel">Фото</span>
-                    <input type="file" accept="image/*" capture="environment" class="hidden photo-input" onchange="handlePhoto(this)">
-                </label>
-            </div>
-            <div class="photo-indicator hidden text-sm text-green-600 font-bold mt-3 bg-green-50 p-2 rounded-lg text-center"><i class="fas fa-check-circle mx-1"></i><span data-i18n="photoAdded">Фотография добавлена</span></div>
         </div>
     </template>
 
@@ -134,8 +149,8 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbxMN6s8ektwhHxuE_8xDz1ZaeqYyXaLyniwi_xFpbzVEjFEo_AUd6PybJk6nGKxmy7E/exec";
         
         const dict = {
-            ru: { syncText: "Синхронизация...", title: "Инспекция Систем", subtitle: "Управление активами и ремонтом", inspectorLabel: "ФИО инспектора", deptLabel: "Отделение (напр. А 1)", startBtn: "Начать проверку", roomCheckTitle: "Проверка помещений", roomLabel: "Номер или название помещения:", roomPlaceholder: "Напр: 101", okBtn: "ОК", roomPrefix: "Помещение:", allGoodBtn: "В помещении всё исправно", addIssueBtn: "Добавить неисправность", saveRoomBtn: "Сохранить дефекты помещения", inspectedTitle: "Уже проверено (нажмите для деталей):", emptyList: "(пока пусто)", finishBtn: "Завершить проверку отделения", whatBroken: "Что неисправно?", ratingLabel: "Действие:", btnRepair: "Ремонт", btnReplace: "Замена", selectDefault: "Выберите систему...", otherOption: "🔧 Другое (вписать вручную)...", customPlaceholder: "Впишите название...", commentPlaceholder: "Описание поломки (обязательно)...", photoLabel: "Фото", photoAdded: "Фотография добавлена", alertUnsavedRoom: "Внимание! Сначала сохраните текущее открытое помещение!", detailsTitle: "Детали помещения" },
-            he: { syncText: "מסנכרן...", title: "בדיקת מערכות", subtitle: "ניהול נכסים ותיקונים", inspectorLabel: "שם הבודק", deptLabel: "מחלקה (לדוגמה A 1)", startBtn: "התחל בדיקה", roomCheckTitle: "בדיקת חדרים", roomLabel: "מספר או שם חדר:", roomPlaceholder: "לדוגמה: 101", okBtn: "אישור", roomPrefix: "חדר:", allGoodBtn: "הכל תקין בחדר זה", addIssueBtn: "הוסף תקלה", saveRoomBtn: "שמור תקלות חדר", inspectedTitle: "כבר נבדקו (לחץ לפירוט):", emptyList: "(ריק)", finishBtn: "סיים בדיקת מחלקה", whatBroken: "מה תקול?", ratingLabel: "פעולה:", btnRepair: "תיקון", btnReplace: "החלפה", selectDefault: "בחר מערכת...", otherOption: "🔧 אחר (הזן ידנית)...", customPlaceholder: "הזן שם...", commentPlaceholder: "תיאור התקלה (חובה)...", photoLabel: "תמונה", photoAdded: "תמונה צורפה", alertUnsavedRoom: "שים לב! אנא שמור קודם את החדר הפתוח הנוכחי!", detailsTitle: "פירוט חדר" }
+            ru: { syncText: "Синхронизация...", title: "Инспекция Систем", subtitle: "Управление активами и ремонтом", inspectorLabel: "ФИО инспектора", deptLabel: "Отделение (напр. А 1)", startBtn: "Начать проверку", roomCheckTitle: "Проверка помещений", roomLabel: "Номер или название помещения:", roomPlaceholder: "Напр: 101", okBtn: "ОК", roomPrefix: "Помещение:", allGoodBtn: "В помещении всё исправно", addIssueBtn: "Добавить неисправность", saveRoomBtn: "Сохранить дефекты помещения", inspectedTitle: "Уже проверено (нажмите для деталей):", emptyList: "(пока пусто)", finishBtn: "Завершить проверку отделения", whatBroken: "Что неисправно?", ratingLabel: "Действие:", btnRepair: "Ремонт", btnReplace: "Замена", selectDefault: "Выберите систему...", otherOption: "🔧 Другое (вписать вручную)...", customPlaceholder: "Впишите название...", commentPlaceholder: "Описание поломки (обязательно)...", photoLabel: "Фото", photoAdded: "Фотография добавлена", alertUnsavedRoom: "Внимание! Сначала сохраните текущее открытое помещение!", detailsTitle: "Детали помещения", newIssueTitle: "Новая неисправность...", collapseBtn: "Готово (Свернуть)" },
+            he: { syncText: "מסנכרן...", title: "בדיקת מערכות", subtitle: "ניהול נכסים ותיקונים", inspectorLabel: "שם הבודק", deptLabel: "מחלקה (לדוגמה A 1)", startBtn: "התחל בדיקה", roomCheckTitle: "בדיקת חדרים", roomLabel: "מספר או שם חדר:", roomPlaceholder: "לדוגמה: 101", okBtn: "אישור", roomPrefix: "חדר:", allGoodBtn: "הכל תקין בחדר זה", addIssueBtn: "הוסף תקלה", saveRoomBtn: "שמור תקלות חדר", inspectedTitle: "כבר נבדקו (לחץ לפירוט):", emptyList: "(ריק)", finishBtn: "סיים בדיקת מחלקה", whatBroken: "מה תקול?", ratingLabel: "פעולה:", btnRepair: "תיקון", btnReplace: "החלפה", selectDefault: "בחר מערכת...", otherOption: "🔧 אחר (הזן ידנית)...", customPlaceholder: "הזן שם...", commentPlaceholder: "תיאור התקלה (חובה)...", photoLabel: "תמונה", photoAdded: "תמונה צורפה", alertUnsavedRoom: "שים לב! אנא שמור קודם את החדר הפתוח הנוכחי!", detailsTitle: "פירוט חדר", newIssueTitle: "תקלה חדשה...", collapseBtn: "מוכן (מזער)" }
         };
 
         const isHebrew = (navigator.language || navigator.userLanguage).toLowerCase().startsWith('he');
@@ -143,22 +158,12 @@
 
         let state = { inspector: '', department: '', currentRoom: '', inspectedRooms: {}, categories: {}, stats: { critical: 0, replace: 0 }, isRunning: false };
 
-        function vibrate(type = 'light') {
-            if (!navigator.vibrate) return;
-            try {
-                if (type === 'light') navigator.vibrate(30); else if (type === 'medium') navigator.vibrate(60); else if (type === 'success') navigator.vibrate([30, 50, 30]); else if (type === 'error') navigator.vibrate([100, 50, 100]);
-            } catch(e) {}
-        }
-
+        function vibrate(type = 'light') { if (!navigator.vibrate) return; try { if (type === 'light') navigator.vibrate(30); else if (type === 'medium') navigator.vibrate(60); else if (type === 'success') navigator.vibrate([30, 50, 30]); else if (type === 'error') navigator.vibrate([100, 50, 100]); } catch(e) {} }
         function appAlert(message) { vibrate('error'); alert(message); }
         window.addEventListener('beforeunload', e => { if (state.isRunning) { e.preventDefault(); e.returnValue = ''; } });
 
         document.addEventListener("DOMContentLoaded", () => {
-            if (isHebrew) {
-                document.documentElement.dir = 'rtl'; document.documentElement.lang = 'he';
-                document.getElementById('roomName').classList.replace('rounded-l-xl', 'rounded-r-xl');
-                document.getElementById('roomName').nextElementSibling.classList.replace('rounded-r-xl', 'rounded-l-xl');
-            }
+            if (isHebrew) { document.documentElement.dir = 'rtl'; document.documentElement.lang = 'he'; document.getElementById('roomName').classList.replace('rounded-l-xl', 'rounded-r-xl'); document.getElementById('roomName').nextElementSibling.classList.replace('rounded-r-xl', 'rounded-l-xl'); }
             applyTranslations(document); restoreSession(); 
         });
 
@@ -168,59 +173,70 @@
         }
 
         function saveSession() { localStorage.setItem('hcl_state_v2', JSON.stringify(state)); }
-        function restoreSession() {
-            const saved = localStorage.getItem('hcl_state_v2');
-            if (saved) {
-                state = JSON.parse(saved);
-                if (state.isRunning) {
-                    document.getElementById('headerInfo').innerText = `${state.inspector} | ${state.department}`;
-                    updateInspectedUI(); navigate('inspectionPage');
-                }
-            }
-        }
+        function restoreSession() { const saved = localStorage.getItem('hcl_state_v2'); if (saved) { state = JSON.parse(saved); if (state.isRunning) { document.getElementById('headerInfo').innerText = `${state.inspector} | ${state.department}`; updateInspectedUI(); navigate('inspectionPage'); } } }
         function clearSession() { state.isRunning = false; localStorage.removeItem('hcl_state_v2'); location.reload(); }
         function confirmExit() { vibrate('medium'); if(confirm(isHebrew ? "לצאת מהבדיקה? הנתונים יאבדו." : "Выйти из инспекции? Несохраненные данные будут потеряны.")) clearSession(); }
 
         async function startInspection() {
             vibrate('light');
-            const insp = document.getElementById('inspectorName').value.trim();
-            const dept = document.getElementById('department').value.trim();
+            const insp = document.getElementById('inspectorName').value.trim(); const dept = document.getElementById('department').value.trim();
             if(!insp || !dept) return appAlert(isHebrew ? "מלא את כל השדות!" : "Заполните все поля!");
-            
             state.inspector = insp; state.department = dept; state.isRunning = true;
             showLoader(isHebrew ? "טוען נתונים..." : "Загрузка базы...");
-            try {
-                const cached = localStorage.getItem('hcl_cats');
-                if (cached) state.categories = JSON.parse(cached);
-                const res = await fetch(`${API_URL}?action=getSettings`);
-                const data = await res.json();
-                if (data.categories && Object.keys(data.categories).length > 0) {
-                    state.categories = data.categories; localStorage.setItem('hcl_cats', JSON.stringify(state.categories)); 
-                }
-            } catch(e) {}
+            try { const cached = localStorage.getItem('hcl_cats'); if (cached) state.categories = JSON.parse(cached); const res = await fetch(`${API_URL}?action=getSettings`); const data = await res.json(); if (data.categories && Object.keys(data.categories).length > 0) { state.categories = data.categories; localStorage.setItem('hcl_cats', JSON.stringify(state.categories)); } } catch(e) {}
             if(Object.keys(state.categories).length === 0) { state.categories = isHebrew ? {"כללי": ["חלון", "דלת"]} : {"Общее": ["Окно", "Дверь"]}; }
-
-            saveSession();
-            document.getElementById('headerInfo').innerText = `${state.inspector} | ${state.department}`;
-            navigate('inspectionPage'); hideLoader(); vibrate('success');
+            saveSession(); document.getElementById('headerInfo').innerText = `${state.inspector} | ${state.department}`; navigate('inspectionPage'); hideLoader(); vibrate('success');
         }
 
         function openRoom() {
+            vibrate('light'); if (!document.getElementById('activeRoomBlock').classList.contains('hidden')) return appAlert(T.alertUnsavedRoom);
+            const name = document.getElementById('roomName').value.trim(); if(!name) return;
+            state.currentRoom = name; document.getElementById('currentRoomDisplay').innerText = name; document.getElementById('issuesList').innerHTML = ''; 
+            document.getElementById('allGoodBtn').classList.remove('hidden'); document.getElementById('saveRoomBtn').classList.add('hidden'); document.getElementById('activeRoomBlock').classList.remove('hidden');
+        }
+
+        function updateIssueTitle(el) {
+            const row = el.closest('.issue-row');
+            let sys = row.querySelector('.system-select').value;
+            if (sys === 'OTHER') sys = row.querySelector('.custom-system-input').value.trim();
+            const rBlock = row.querySelector('.rating-block');
+            const rating = rBlock ? rBlock.dataset.val : null;
+            let titleTxt = sys || (isHebrew ? "תקלה חדשה..." : "Новая неисправность...");
+            if (rating == 1) titleTxt += isHebrew ? " (החלפה)" : " (Замена)";
+            if (rating == 2) titleTxt += isHebrew ? " (תיקון)" : " (Ремонт)";
+            row.querySelector('.title-text').innerText = titleTxt;
+        }
+
+        function collapseIssue(btn) {
             vibrate('light');
-            if (!document.getElementById('activeRoomBlock').classList.contains('hidden')) return appAlert(T.alertUnsavedRoom);
-            const name = document.getElementById('roomName').value.trim();
-            if(!name) return;
-            state.currentRoom = name;
-            document.getElementById('currentRoomDisplay').innerText = name;
-            document.getElementById('issuesList').innerHTML = ''; 
-            document.getElementById('allGoodBtn').classList.remove('hidden');
-            document.getElementById('saveRoomBtn').classList.add('hidden');
-            document.getElementById('activeRoomBlock').classList.remove('hidden');
+            const row = btn.closest('.issue-row');
+            row.querySelector('.issue-body').classList.add('hidden');
+            const header = row.querySelector('.issue-header');
+            header.classList.remove('bg-indigo-50', 'hover:bg-indigo-100');
+            header.classList.add('bg-green-50', 'hover:bg-green-100');
+            const title = row.querySelector('.issue-title');
+            title.classList.replace('text-indigo-700', 'text-green-700');
+            row.querySelector('.issue-title i').className = "fas fa-check-circle mr-2 text-lg text-green-500";
+        }
+
+        function toggleIssue(header, event) {
+            if (event.target.closest('button')) return;
+            vibrate('light');
+            const row = header.closest('.issue-row');
+            const body = row.querySelector('.issue-body');
+            if (body.classList.contains('hidden')) {
+                body.classList.remove('hidden');
+                header.classList.remove('bg-green-50', 'hover:bg-green-100');
+                header.classList.add('bg-indigo-50', 'hover:bg-indigo-100');
+                row.querySelector('.issue-title').classList.replace('text-green-700', 'text-indigo-700');
+                row.querySelector('.issue-title i').className = "fas fa-edit mr-2 text-lg text-indigo-500";
+            } else { collapseIssue(header); }
         }
 
         function addIssueRow() {
             vibrate('light');
             document.getElementById('allGoodBtn').classList.add('hidden'); document.getElementById('saveRoomBtn').classList.remove('hidden');
+            document.querySelectorAll('.issue-body:not(.hidden)').forEach(body => { collapseIssue(body.querySelector('.collapse-btn')); });
             const temp = document.getElementById('issueTemplate').content.cloneNode(true);
             applyTranslations(temp);
             const select = temp.querySelector('.system-select');
@@ -234,8 +250,9 @@
             select.innerHTML = opts; document.getElementById('issuesList').appendChild(temp);
         }
 
-        function removeIssue(btn) {
-            vibrate('medium'); btn.parentElement.remove();
+        function removeIssue(btn, event) {
+            if(event) event.stopPropagation(); 
+            vibrate('medium'); btn.closest('.issue-row').remove();
             if (document.querySelectorAll('.issue-row').length === 0) {
                 document.getElementById('allGoodBtn').classList.remove('hidden'); document.getElementById('saveRoomBtn').classList.add('hidden');
             }
@@ -291,30 +308,21 @@
                     const comment = row.querySelector('.comment-text').value.trim();
                     if(!sys || !rating || !comment) return appAlert(isHebrew ? "מלא את כל שדות החובה והפעולות!" : "Выберите систему, действие и опишите поломку!");
                     items.push({ name: sys, score: rating, comment: comment, photoBase64: row.querySelector('.photo-input').dataset.base64 || "" });
-                    const actionText = rating == 1 ? T.btnReplace : T.btnRepair; historyLog.push(`• ${sys} (${actionText})`);
+                    
+                    const actionTextHE = rating == 1 ? "החלפה" : "תיקון"; 
+                    historyLog.push(`• ${sys} (${actionTextHE})`);
                 }
-            } else { historyLog.push(isHebrew ? "✅ הכל תקין" : "✅ Всё исправно"); }
+            } else { historyLog.push("✅ הכל תקין"); }
 
             showLoader(T.syncText);
             try {
-                const res = await fetch(API_URL, {
-                    method: 'POST', body: JSON.stringify({ inspector: state.inspector, department: state.department, room: state.currentRoom, items: items })
-                });
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ inspector: state.inspector, department: state.department, room: state.currentRoom, items: items }) });
                 const out = await res.json();
-                
-                // ВАЖНО: ТЕПЕРЬ ПРИЛОЖЕНИЕ ЛОВИТ ОШИБКИ ОТ GOOGLE И НЕ ДАЕТ ПОТЕРЯТЬ ДАННЫЕ
-                if (out.status === "error") {
-                    hideLoader();
-                    return appAlert("ОШИБКА БАЗЫ ДАННЫХ:\n" + out.message + "\nПопробуйте нажать кнопку сохранения еще раз.");
-                }
-
+                if (out.status === "error") { hideLoader(); return appAlert("ОШИБКА БАЗЫ ДАННЫХ:\n" + out.message + "\nПопробуйте нажать кнопку сохранения еще раз."); }
                 state.inspectedRooms[state.currentRoom] = historyLog; saveSession(); updateInspectedUI();
                 document.getElementById('activeRoomBlock').classList.add('hidden'); document.getElementById('roomName').value = '';
                 document.getElementById('roomDetailsDisplay').classList.add('hidden'); window.scrollTo(0, 0); vibrate('success');
-            } catch(e) {
-                appAlert("Сбой интернета. Проверьте сеть и нажмите 'Сохранить' еще раз.");
-            }
-            hideLoader();
+            } catch(e) { appAlert("Сбой интернета. Проверьте сеть и нажмите 'Сохранить' еще раз."); hideLoader(); }
         }
 
         function updateInspectedUI() {
@@ -343,16 +351,16 @@
             if(roomKeys.length === 0) return appAlert(isHebrew ? "לא נבדקו חדרים!" : "Вы не проверили ни одной комнаты!");
             if(!confirm(isHebrew ? "לסיים ולשלוח דיווח לטלגרם?" : "Завершить и отправить отчет в Telegram?")) return;
             
-            let report = isHebrew ? `🏥 *דוח מחלקה: ${state.department}*\n👤 בודק: ${state.inspector}\n\n` : `🏥 *Отчет по отделению: ${state.department}*\n👤 Инспектор: ${state.inspector}\n\n`;
+            let report = `🏥 *דוח מחלקה: ${state.department}*\n👤 בודק: ${state.inspector}\n\n`;
             let defects = []; let okRooms = [];
             for (const [room, issues] of Object.entries(state.inspectedRooms)) {
-                if (issues.length === 1 && issues[0].includes("✅")) okRooms.push(room);
-                else defects.push((isHebrew ? `*חדר ${room}:*` : `*Пом. ${room}:*`) + `\n${issues.join('\n')}`);
+                if (issues.length === 1 && issues[0].includes("תקין")) okRooms.push(room);
+                else defects.push(`*חדר ${room}:*\n${issues.join('\n')}`);
             }
-            if (defects.length > 0) report += isHebrew ? `⚠️ *תקלות שנמצאו:*\n${defects.join('\n\n')}\n\n` : `⚠️ *ВЫЯВЛЕННЫЕ ДЕФЕКТЫ:*\n${defects.join('\n\n')}\n\n`;
-            else report += isHebrew ? `✅ *כל החדרים שנבדקו תקינים!*\n\n` : `✅ *Все проверенные помещения исправны!*\n\n`;
-            report += isHebrew ? `📊 *סטטיסטיקה:*\nסה"כ נבדקו: ${roomKeys.length} חדרים.` : `📊 *Статистика:*\nВсего проверено: ${roomKeys.length} помещений.`;
-            if (okRooms.length > 0) report += isHebrew ? `\nללא הערות: ${okRooms.join(', ')}` : `\nБез замечаний: ${okRooms.join(', ')}`;
+            if (defects.length > 0) report += `⚠️ *תקלות שנמצאו:*\n${defects.join('\n\n')}\n\n`;
+            else report += `✅ *כל החדרים שנבדקו תקינים!*\n\n`;
+            report += `📊 *סטטיסטיקה:*\nסה"כ נבדקו: ${roomKeys.length} חדרים.`;
+            if (okRooms.length > 0) report += `\nללא הערות: ${okRooms.join(', ')}`;
 
             showLoader(isHebrew ? "שולח..." : "Отправка...");
             try {
