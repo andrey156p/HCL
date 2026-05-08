@@ -3,459 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Инспектор Больничных Систем</title>
-    <link rel="manifest" href="manifest.json">
+    <title>HCL Инспектор</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .page { display: none; }
-        .page.active { display: block; }
+        .page { display: none; } .page.active { display: block; }
         .loader-overlay { background: rgba(255,255,255,0.9); z-index: 100; }
-        .status-btn.selected { border-width: 3px; border-color: #1f2937; transform: scale(0.98); }
-        select optgroup { font-weight: bold; color: #4f46e5; background: #e0e7ff; }
-        select option { font-weight: normal; color: #111827; background: #fff; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* Анимация для красной подсветки */
-        .error-shake { animation: shake 0.4s; border-color: #ef4444 !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important; }
+        .error-shake { animation: shake 0.4s; border-color: #ef4444 !important; background-color: #fef2f2 !important; }
         @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .status-btn.selected { ring: 4px; ring-color: #6366f1; transform: scale(0.95); }
     </style>
 </head>
-<body class="text-gray-800">
+<body>
 
     <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center hidden loader-overlay">
-        <div class="loader"></div>
-        <p class="mt-4 text-gray-700 font-bold text-lg" id="loaderText" data-i18n="syncText">Синхронизация с базой...</p>
+        <div class="loader border-4 border-indigo-500 border-t-transparent rounded-full w-12 h-12 animate-spin"></div>
+        <p class="mt-4 font-bold text-indigo-700">Обработка...</p>
     </div>
 
-    <div id="customAlert" class="fixed inset-0 bg-gray-900 bg-opacity-60 hidden z-[200] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center transform transition-transform scale-100">
-            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-exclamation-triangle text-red-500 text-3xl"></i>
-            </div>
-            <p id="customAlertText" class="text-gray-800 font-bold text-lg mb-6 leading-tight"></p>
-            <button onclick="closeAppAlert()" class="w-full bg-gray-900 text-white py-4 rounded-xl font-black text-lg active:scale-95 transition-transform" data-i18n="okBtn">ОК</button>
+    <div id="msgBox" class="fixed inset-0 bg-black/50 hidden z-[200] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
+            <i id="msgIcon" class="fas fa-exclamation-circle text-4xl mb-4"></i>
+            <p id="msgText" class="text-lg font-bold mb-6"></p>
+            <button onclick="closeMsg()" class="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold">ОК</button>
         </div>
     </div>
 
-    <div id="customConfirm" class="fixed inset-0 bg-gray-900 bg-opacity-60 hidden z-[200] flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center">
-            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-question-circle text-indigo-600 text-3xl"></i>
-            </div>
-            <p id="customConfirmText" class="text-gray-800 font-bold text-lg mb-6 leading-tight"></p>
-            <div class="flex gap-3">
-                <button onclick="resolveConfirm(false)" class="flex-1 bg-gray-100 text-gray-700 py-4 rounded-xl font-bold text-lg active:scale-95 transition-transform" data-i18n="cancelBtn">Отмена</button>
-                <button onclick="resolveConfirm(true)" class="flex-1 bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg active:scale-95 transition-transform" data-i18n="yesBtn">Да</button>
-            </div>
+    <div id="setupPage" class="page active p-6 max-w-lg mx-auto mt-10">
+        <div class="bg-white p-8 rounded-3xl shadow-xl">
+            <h1 class="text-3xl font-black text-center mb-8">Инспекция ג 2</h1>
+            <input type="text" id="inspectorName" placeholder="Имя инспектора" class="w-full p-4 mb-4 bg-gray-50 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500">
+            <input type="text" id="department" placeholder="Отделение" class="w-full p-4 mb-8 bg-gray-50 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500">
+            <button onclick="start()" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-bold text-xl shadow-lg">Начать работу</button>
         </div>
     </div>
 
-    <div id="setupPage" class="page active p-4 md:p-8 max-w-lg mx-auto mt-6">
-        <div class="bg-white p-8 rounded-3xl shadow-lg border border-gray-100">
-            <div class="text-center mb-8">
-                <i class="fas fa-hospital-user fa-4x text-indigo-500 mb-4"></i>
-                <h1 class="text-3xl font-black text-gray-800" data-i18n="title">Инспекция Систем</h1>
-                <p class="text-gray-500 font-medium mt-2" data-i18n="subtitle">Управление активами и ремонтом</p>
-            </div>
-            <div class="space-y-5">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1" data-i18n="inspectorLabel">ФИО проверяющего</label>
-                    <input type="text" id="inspectorName" class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold text-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1" data-i18n="deptLabel">Отделение</label>
-                    <input type="text" id="department" class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold text-lg">
-                </div>
-            </div>
-            <button onclick="startInspection()" class="w-full mt-8 bg-indigo-600 text-white py-4 px-4 rounded-xl shadow-md text-lg font-bold hover:bg-indigo-700 active:scale-95 transition-transform" data-i18n="startBtn">
-                Начать инспекцию
-            </button>
+    <div id="inspectionPage" class="page p-4 max-w-3xl mx-auto">
+        <div class="flex justify-between items-center bg-white p-4 rounded-3xl shadow-sm mb-4">
+            <span id="info" class="font-bold text-indigo-600"></span>
+            <button onclick="location.reload()" class="text-red-500 p-2"><i class="fas fa-power-off"></i></button>
         </div>
-    </div>
 
-    <div id="inspectionPage" class="page p-3 md:p-6 max-w-3xl mx-auto">
-        <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-200 mb-4 flex justify-between items-center">
-            <div>
-                <h2 class="text-xl font-black text-gray-800" data-i18n="roomCheckTitle">Проверка помещений</h2>
-                <p class="text-sm text-indigo-600 font-bold mt-1" id="headerInfo"></p>
-            </div>
-            <button onclick="confirmExit()" class="bg-red-50 text-red-600 p-3 rounded-xl hover:bg-red-100 active:scale-95 transition-transform">
-                <i class="fas fa-sign-out-alt fa-lg"></i>
-            </button>
-        </div>
-        
-        <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-200 mb-4">
-            <label class="block text-sm font-bold text-gray-700 mb-2" data-i18n="roomLabel">Номер или название помещения:</label>
+        <div class="bg-white p-4 rounded-3xl shadow-sm mb-6">
             <div class="flex gap-2">
-                <input type="text" id="roomName" class="flex-1 px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 font-bold text-lg" data-i18n-ph="roomPlaceholder" placeholder="Напр: 101">
-                <button onclick="openRoom()" class="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-bold text-lg shadow-sm active:scale-95 transition-transform" data-i18n="okBtn">ОК</button>
+                <input type="text" id="roomName" placeholder="Номер помещения" class="flex-1 p-4 bg-gray-50 border rounded-2xl outline-none">
+                <button onclick="openRoom()" class="bg-indigo-600 text-white px-8 rounded-2xl font-bold">ОК</button>
             </div>
         </div>
 
-        <div id="activeRoomBlock" class="hidden">
-            <div class="bg-indigo-600 text-white p-4 rounded-2xl shadow-md mb-4 flex justify-between items-center">
-                <h3 class="text-xl font-black"><span data-i18n="roomPrefix">Помещение:</span> <span id="currentRoomDisplay" class="text-yellow-300"></span></h3>
-            </div>
-
-            <button id="allGoodBtn" onclick="saveRoomData(true)" class="w-full bg-green-500 text-white py-4 px-4 rounded-2xl shadow-md font-black text-lg mb-6 active:scale-95 transition-transform flex justify-center items-center gap-2">
-                <i class="fas fa-check-circle text-2xl"></i> <span data-i18n="allGoodBtn">В помещении всё исправно</span>
-            </button>
-            
-            <div id="issuesList" class="space-y-4 mb-4"></div>
-
-            <button onclick="addIssueRow()" class="w-full bg-white border-2 border-dashed border-indigo-400 text-indigo-600 py-4 px-4 rounded-2xl mb-6 hover:bg-indigo-50 font-bold text-lg flex justify-center items-center shadow-sm active:scale-95 transition-transform">
-                <i class="fas fa-plus-circle mx-2 text-xl"></i> <span data-i18n="addIssueBtn">Добавить неисправность</span>
-            </button>
-
-            <button id="saveRoomBtn" onclick="saveRoomData(false)" class="hidden w-full bg-indigo-800 text-white py-4 px-6 rounded-2xl shadow-md hover:bg-indigo-900 font-black text-lg flex justify-center items-center gap-2 active:scale-95 transition-transform">
-                <i class="fas fa-save text-xl"></i> <span data-i18n="saveRoomBtn">Сохранить дефекты помещения</span>
-            </button>
+        <div id="roomWorkArea" class="hidden">
+            <div id="issuesList" class="space-y-4"></div>
+            <button onclick="addRow()" class="w-full py-4 mt-4 border-2 border-dashed border-indigo-300 text-indigo-500 rounded-2xl font-bold"><i class="fas fa-plus mr-2"></i>Добавить поломку</button>
+            <button id="saveBtn" onclick="save()" class="w-full py-5 mt-6 bg-indigo-800 text-white rounded-3xl font-black text-xl shadow-xl hidden">Сохранить всё в таблицу</button>
         </div>
 
-        <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-200 mt-8 mb-6">
-            <h4 class="text-xs font-black text-gray-400 uppercase mb-3"><i class="fas fa-history mx-1"></i> <span data-i18n="inspectedTitle">Уже проверено (нажмите для деталей):</span></h4>
-            <div id="inspectedRoomsList" class="flex flex-wrap gap-2 text-sm font-bold">
-                <span class="text-gray-400" data-i18n="emptyList">(пока пусто)</span>
-            </div>
-            <div id="roomDetailsDisplay" class="hidden mt-4 bg-indigo-50 p-4 rounded-xl border border-indigo-100 shadow-inner"></div>
-        </div>
-
-        <button onclick="finishDepartment()" class="w-full bg-red-600 text-white py-5 px-6 rounded-3xl shadow-lg hover:bg-red-700 font-black text-lg flex justify-center items-center gap-2 active:scale-95 transition-transform" data-i18n="finishBtn">
-            <i class="fas fa-flag-checkered text-xl"></i> Завершить проверку отделения
-        </button>
+        <button onclick="finish()" class="w-full py-5 mt-20 bg-red-600 text-white rounded-3xl font-black text-xl shadow-xl">Завершить обход</button>
     </div>
 
-    <template id="issueTemplate">
-        <div class="issue-row bg-white rounded-2xl border-l-4 border-indigo-500 shadow-md relative mb-4 transition-all overflow-hidden">
-            <div class="issue-header p-4 flex justify-between items-center cursor-pointer bg-indigo-50 hover:bg-indigo-100 transition-colors" onclick="toggleIssue(this, event)">
-                <div class="font-bold text-indigo-700 issue-title flex items-center">
-                    <i class="fas fa-edit mr-2 text-lg"></i> <span class="title-text" data-i18n="newIssueTitle">Редактирование...</span>
-                </div>
-                <button onclick="removeIssue(this, event)" class="text-red-500 w-8 h-8 rounded-full hover:bg-red-200 flex items-center justify-center bg-red-50 transition-colors"><i class="fas fa-trash-alt"></i></button>
+    <template id="rowTemp">
+        <div class="row bg-white rounded-3xl shadow-md border-l-8 border-indigo-500 overflow-hidden transition-all">
+            <div class="row-header p-4 flex justify-between items-center bg-indigo-50 cursor-pointer" onclick="toggleRow(this)">
+                <span class="row-title font-bold text-indigo-800">Новая запись...</span>
+                <button onclick="this.closest('.row').remove(); checkEmpty()" class="text-red-400 p-2"><i class="fas fa-times"></i></button>
             </div>
-            <div class="issue-body p-5 border-t border-gray-100">
-                <label class="block text-xs font-black text-gray-400 uppercase mb-2" data-i18n="whatBroken">Что неисправно?</label>
-                <select class="system-select w-full p-4 mb-2 rounded-xl bg-gray-50 border border-gray-300 font-bold text-gray-900 text-lg transition-colors focus:ring-2 focus:ring-indigo-500 outline-none" onchange="toggleCustomInput(this); updateIssueTitle(this); removeError(this)"></select>
-                <input type="text" class="custom-system-input hidden w-full p-4 mb-4 rounded-xl border border-gray-300 font-bold text-lg transition-colors focus:ring-2 focus:ring-indigo-500 outline-none" data-i18n-ph="customPlaceholder" placeholder="Впишите название..." oninput="updateIssueTitle(this); removeError(this)">
+            <div class="row-body p-5 space-y-4">
+                <select class="sys w-full p-4 bg-gray-50 border rounded-xl font-bold outline-none">
+                    <option value="" disabled selected>Что сломано?</option>
+                    <option value="חשמל">Электрика</option>
+                    <option value="דלת">Дверь / Косяк</option>
+                    <option value="תקרה">Потолок</option>
+                    <option value="קיר">Стена / Покраска</option>
+                    <option value="ריצפה">Пол</option>
+                    <option value="OTHER">Другое...</option>
+                </select>
+                <input type="text" class="custom-sys hidden w-full p-4 border rounded-xl" placeholder="Назовите систему">
                 
-                <label class="block text-xs font-black text-gray-400 uppercase mt-4 mb-2" data-i18n="ratingLabel">Действие:</label>
-                <div class="rating-block p-1 rounded-xl transition-all flex flex-col sm:flex-row gap-3 mb-4">
-                    <button data-v="2" class="status-btn flex-1 py-3 px-4 rounded-xl bg-orange-500 text-white font-bold text-lg shadow-sm flex items-center justify-center gap-2 transition-transform" onclick="setRating(this, 2); updateIssueTitle(this)">
-                        <i class="fas fa-tools"></i> <span data-i18n="btnRepair">Ремонт</span>
-                    </button>
-                    <button data-v="1" class="status-btn flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-bold text-lg shadow-sm flex items-center justify-center gap-2 transition-transform" onclick="setRating(this, 1); updateIssueTitle(this)">
-                        <i class="fas fa-sync-alt"></i> <span data-i18n="btnReplace">Замена</span>
-                    </button>
+                <div class="flex gap-2 rating">
+                    <button onclick="setR(this, 2)" class="flex-1 py-3 bg-orange-400 text-white rounded-xl font-bold">Ремонт</button>
+                    <button onclick="setR(this, 1)" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold">Замена</button>
                 </div>
-                
-                <div class="flex gap-2 items-start mt-4">
-                    <textarea class="comment-text flex-1 p-4 text-base border border-gray-300 rounded-xl font-medium transition-colors focus:ring-2 focus:ring-indigo-500 outline-none" rows="2" data-i18n-ph="commentPlaceholder" placeholder="Описание поломки (обязательно)..." oninput="removeError(this)"></textarea>
-                    <label class="p-4 bg-gray-50 border border-gray-300 rounded-xl cursor-pointer flex flex-col items-center justify-center w-20 hover:bg-gray-100 h-full min-h-[90px] transition-colors" onclick="vibrate('light')">
-                        <i class="fas fa-camera text-gray-400 text-2xl mb-1"></i>
-                        <span class="text-[10px] text-gray-500 font-bold uppercase" data-i18n="photoLabel">Фото</span>
-                        <input type="file" accept="image/*" capture="environment" class="hidden photo-input" onchange="handlePhoto(this)">
+
+                <div class="flex gap-2">
+                    <textarea class="comm flex-1 p-4 bg-gray-50 border rounded-xl outline-none" placeholder="Комментарий"></textarea>
+                    <label class="w-20 bg-gray-100 rounded-xl flex flex-col items-center justify-center border cursor-pointer">
+                        <i class="fas fa-camera text-gray-400 text-2xl"></i>
+                        <input type="file" accept="image/*" capture="environment" class="hidden photo" onchange="hPhoto(this)">
                     </label>
                 </div>
-                <div class="photo-indicator hidden text-sm text-green-600 font-bold mt-3 bg-green-50 p-2 rounded-lg text-center"><i class="fas fa-check-circle mx-1"></i><span data-i18n="photoAdded">Фотография добавлена</span></div>
                 
-                <button onclick="attemptCollapse(this)" class="collapse-btn w-full mt-5 bg-gray-100 text-gray-700 py-4 rounded-xl font-black text-lg hover:bg-gray-200 flex items-center justify-center gap-2 transition-colors active:scale-95">
-                    <i class="fas fa-check"></i> <span data-i18n="collapseBtn">Готово (Свернуть)</span>
-                </button>
+                <button onclick="validateAndCollapse(this)" class="done-btn w-full py-4 bg-gray-200 text-gray-600 rounded-xl font-black transition-colors">ГОТОВО (СВЕРНУТЬ)</button>
             </div>
         </div>
     </template>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxMN6s8ektwhHxuE_8xDz1ZaeqYyXaLyniwi_xFpbzVEjFEo_AUd6PybJk6nGKxmy7E/exec";
-        
-        const dict = {
-            ru: { syncText: "Синхронизация...", title: "Инспекция Систем", subtitle: "Управление активами и ремонтом", inspectorLabel: "ФИО инспектора", deptLabel: "Отделение (напр. А 1)", startBtn: "Начать проверку", roomCheckTitle: "Проверка помещений", roomLabel: "Номер или название помещения:", roomPlaceholder: "Напр: 101", okBtn: "ОК", cancelBtn: "Отмена", yesBtn: "Да", roomPrefix: "Помещение:", allGoodBtn: "В помещении всё исправно", addIssueBtn: "Добавить неисправность", saveRoomBtn: "Сохранить дефекты помещения", inspectedTitle: "Уже проверено (нажмите для деталей):", emptyList: "(пока пусто)", finishBtn: "Завершить проверку отделения", whatBroken: "Что неисправно?", ratingLabel: "Действие:", btnRepair: "Ремонт", btnReplace: "Замена", selectDefault: "Выберите систему...", otherOption: "🔧 Другое (вписать вручную)...", customPlaceholder: "Впишите название...", commentPlaceholder: "Описание поломки (обязательно)...", photoLabel: "Фото", photoAdded: "Фотография добавлена", alertUnsavedRoom: "Внимание! Сначала сохраните текущее открытое помещение!", alertFillFields: "Заполните все обязательные поля (подсвечены красным)!", detailsTitle: "Детали помещения", newIssueTitle: "Новая неисправность...", collapseBtn: "Готово (Свернуть)" },
-            he: { syncText: "מסנכרן...", title: "בדיקת מערכות", subtitle: "ניהול נכסים ותיקונים", inspectorLabel: "שם הבודק", deptLabel: "מחלקה (לדוגמה A 1)", startBtn: "התחל בדיקה", roomCheckTitle: "בדיקת חדרים", roomLabel: "מספר או שם חדר:", roomPlaceholder: "לדוגמה: 101", okBtn: "אישור", cancelBtn: "ביטול", yesBtn: "כן", roomPrefix: "חדר:", allGoodBtn: "הכל תקין בחדר זה", addIssueBtn: "הוסף תקלה", saveRoomBtn: "שמור תקלות חדר", inspectedTitle: "כבר נבדקו (לחץ לפירוט):", emptyList: "(ריק)", finishBtn: "סיים בדיקת מחלקה", whatBroken: "מה תקול?", ratingLabel: "פעולה:", btnRepair: "תיקון", btnReplace: "החלפה", selectDefault: "בחר מערכת...", otherOption: "🔧 אחר (הזן ידנית)...", customPlaceholder: "הזן שם...", commentPlaceholder: "תיאור התקלה (חובה)...", photoLabel: "תמונה", photoAdded: "תמונה צורפה", alertUnsavedRoom: "שים לב! אנא שמור קודם את החדר הפתוח הנוכחי!", alertFillFields: "נא למלא את כל שדות החובה (מודגשים באדום)!", detailsTitle: "פירוט חדר", newIssueTitle: "תקלה חדשה...", collapseBtn: "מוכן (מזער)" }
-        };
+        const API = "https://script.google.com/macros/s/AKfycbxMN6s8ektwhHxuE_8xDz1ZaeqYyXaLyniwi_xFpbzVEjFEo_AUd6PybJk6nGKxmy7E/exec";
+        let state = { ins: '', dept: '', room: '', results: {} };
 
-        const isHebrew = (navigator.language || navigator.userLanguage).toLowerCase().startsWith('he');
-        const T = dict[isHebrew ? 'he' : 'ru'];
-
-        let state = { inspector: '', department: '', currentRoom: '', inspectedRooms: {}, categories: {}, stats: { critical: 0, replace: 0 }, isRunning: false };
-
-        function vibrate(type = 'light') { if (!navigator.vibrate) return; try { if (type === 'light') navigator.vibrate(30); else if (type === 'medium') navigator.vibrate(60); else if (type === 'success') navigator.vibrate([30, 50, 30]); else if (type === 'error') navigator.vibrate([100, 50, 100]); } catch(e) {} }
-        
-        // --- КАСТОМНЫЕ МОДАЛЬНЫЕ ОКНА ---
-        function appAlert(message) {
-            vibrate('error');
-            document.getElementById('customAlertText').innerText = message;
-            document.getElementById('customAlert').classList.remove('hidden');
+        function showMsg(t, err=false) {
+            document.getElementById('msgIcon').className = err ? "fas fa-times-circle text-red-500" : "fas fa-check-circle text-green-500";
+            document.getElementById('msgText').innerText = t;
+            document.getElementById('msgBox').classList.remove('hidden');
         }
-        function closeAppAlert() { document.getElementById('customAlert').classList.add('hidden'); }
+        function closeMsg() { document.getElementById('msgBox').classList.add('hidden'); }
 
-        let confirmCallback = null;
-        function appConfirm(message) {
-            return new Promise((resolve) => {
-                vibrate('medium');
-                document.getElementById('customConfirmText').innerText = message;
-                document.getElementById('customConfirm').classList.remove('hidden');
-                confirmCallback = resolve;
-            });
-        }
-        function resolveConfirm(result) {
-            document.getElementById('customConfirm').classList.add('hidden');
-            if(confirmCallback) confirmCallback(result);
-        }
-
-        window.addEventListener('beforeunload', e => { if (state.isRunning) { e.preventDefault(); e.returnValue = ''; } });
-
-        document.addEventListener("DOMContentLoaded", () => {
-            if (isHebrew) { document.documentElement.dir = 'rtl'; document.documentElement.lang = 'he'; document.getElementById('roomName').classList.replace('rounded-l-xl', 'rounded-r-xl'); document.getElementById('roomName').nextElementSibling.classList.replace('rounded-r-xl', 'rounded-l-xl'); }
-            applyTranslations(document); restoreSession(); 
-        });
-
-        function applyTranslations(container) {
-            container.querySelectorAll('[data-i18n]').forEach(el => el.innerHTML = T[el.dataset.i18n]);
-            container.querySelectorAll('[data-i18n-ph]').forEach(el => el.placeholder = T[el.getAttribute('data-i18n-ph')]);
-        }
-
-        function saveSession() { localStorage.setItem('hcl_state_v2', JSON.stringify(state)); }
-        function restoreSession() { const saved = localStorage.getItem('hcl_state_v2'); if (saved) { state = JSON.parse(saved); if (state.isRunning) { document.getElementById('headerInfo').innerText = `${state.inspector} | ${state.department}`; updateInspectedUI(); navigate('inspectionPage'); } } }
-        function clearSession() { state.isRunning = false; localStorage.removeItem('hcl_state_v2'); location.reload(); }
-        
-        async function confirmExit() { 
-            if(await appConfirm(isHebrew ? "לצאת מהבדיקה? הנתונים יאבדו." : "Выйти из инспекции? Несохраненные данные будут потеряны.")) clearSession(); 
-        }
-
-        async function startInspection() {
-            vibrate('light');
-            const insp = document.getElementById('inspectorName').value.trim(); const dept = document.getElementById('department').value.trim();
-            if(!insp || !dept) return appAlert(isHebrew ? "מלא את כל השדות!" : "Заполните все поля!");
-            state.inspector = insp; state.department = dept; state.isRunning = true;
-            showLoader(isHebrew ? "טוען נתונים..." : "Загрузка базы...");
-            try { const cached = localStorage.getItem('hcl_cats'); if (cached) state.categories = JSON.parse(cached); const res = await fetch(`${API_URL}?action=getSettings`); const data = await res.json(); if (data.categories && Object.keys(data.categories).length > 0) { state.categories = data.categories; localStorage.setItem('hcl_cats', JSON.stringify(state.categories)); } } catch(e) {}
-            if(Object.keys(state.categories).length === 0) { state.categories = isHebrew ? {"כללי": ["חלון", "דלת"]} : {"Общее": ["Окно", "Дверь"]}; }
-            saveSession(); document.getElementById('headerInfo').innerText = `${state.inspector} | ${state.department}`; navigate('inspectionPage'); hideLoader(); vibrate('success');
+        function start() {
+            state.ins = document.getElementById('inspectorName').value;
+            state.dept = document.getElementById('department').value;
+            if(!state.ins || !state.dept) return showMsg("Заполните профиль!", true);
+            document.getElementById('info').innerText = state.ins + " | " + state.dept;
+            document.getElementById('setupPage').classList.remove('active');
+            document.getElementById('inspectionPage').classList.add('active');
         }
 
         function openRoom() {
-            vibrate('light'); if (!document.getElementById('activeRoomBlock').classList.contains('hidden')) return appAlert(T.alertUnsavedRoom);
-            const name = document.getElementById('roomName').value.trim(); if(!name) return;
-            state.currentRoom = name; document.getElementById('currentRoomDisplay').innerText = name; document.getElementById('issuesList').innerHTML = ''; 
-            document.getElementById('allGoodBtn').classList.remove('hidden'); document.getElementById('saveRoomBtn').classList.add('hidden'); document.getElementById('activeRoomBlock').classList.remove('hidden');
+            state.room = document.getElementById('roomName').value;
+            if(!state.room) return;
+            document.getElementById('roomWorkArea').classList.remove('hidden');
+            document.getElementById('issuesList').innerHTML = '';
+            document.getElementById('saveBtn').classList.add('hidden');
         }
 
-        // --- ЛОГИКА ВАЛИДАЦИИ И СВОРАЧИВАНИЯ ---
-        function removeError(el) { el.classList.remove('error-shake'); }
-        
-        function updateIssueTitle(el) {
-            const row = el.closest('.issue-row');
-            let sys = row.querySelector('.system-select').value;
-            if (sys === 'OTHER') sys = row.querySelector('.custom-system-input').value.trim();
-            const rBlock = row.querySelector('.rating-block');
-            const rating = rBlock ? rBlock.dataset.val : null;
-            let titleTxt = sys || (isHebrew ? "תקלה חדשה..." : "Новая неисправность...");
-            if (rating == 1) titleTxt += isHebrew ? " (החלפה)" : " (Замена)";
-            if (rating == 2) titleTxt += isHebrew ? " (תיקון)" : " (Ремонт)";
-            row.querySelector('.title-text').innerText = titleTxt;
+        function addRow() {
+            const temp = document.getElementById('rowTemp').content.cloneNode(true);
+            document.getElementById('issuesList').appendChild(temp);
+            document.getElementById('saveBtn').classList.remove('hidden');
         }
 
-        function attemptCollapse(btn) {
-            const row = btn.closest('.issue-row');
-            const sel = row.querySelector('.system-select');
-            const cInp = row.querySelector('.custom-system-input');
-            const ratingBlock = row.querySelector('.rating-block');
-            const comment = row.querySelector('.comment-text');
-            
-            let isValid = true;
-            
-            if (!sel.value) { sel.classList.add('error-shake'); isValid = false; }
-            else if (sel.value === 'OTHER' && !cInp.value.trim()) { cInp.classList.add('error-shake'); isValid = false; }
-            if (!ratingBlock.dataset.val) { ratingBlock.classList.add('error-shake'); isValid = false; }
-            if (!comment.value.trim()) { comment.classList.add('error-shake'); isValid = false; }
+        function setR(btn, v) {
+            const p = btn.closest('.rating');
+            p.dataset.val = v;
+            p.querySelectorAll('button').forEach(b => b.style.opacity = '0.3');
+            btn.style.opacity = '1';
+        }
 
-            if (!isValid) {
-                vibrate('error');
-                // Маленькая подсказка, если юзер не понимает почему не сворачивается
-                if(!row.dataset.warned) { appAlert(T.alertFillFields); row.dataset.warned = "true"; }
-                return; 
+        function validateAndCollapse(btn) {
+            const row = btn.closest('.row');
+            const sys = row.querySelector('.sys').value;
+            const rat = row.querySelector('.rating').dataset.val;
+            const comm = row.querySelector('.comm').value;
+
+            let err = false;
+            if(!sys) { row.querySelector('.sys').classList.add('error-shake'); err = true; }
+            if(!rat) { row.querySelector('.rating').classList.add('error-shake'); err = true; }
+            if(!comm) { row.querySelector('.comm').classList.add('error-shake'); err = true; }
+
+            if(err) { btn.classList.add('bg-red-500', 'text-white'); return; }
+
+            // Если всё ок
+            btn.classList.remove('bg-red-500');
+            btn.classList.add('bg-green-500', 'text-white');
+            row.querySelector('.row-title').innerText = "✅ " + sys;
+            row.querySelector('.row-body').classList.add('hidden');
+            row.classList.replace('border-indigo-500', 'border-green-500');
+        }
+
+        function toggleRow(header) {
+            const body = header.nextElementSibling;
+            body.classList.toggle('hidden');
+        }
+
+        async function save() {
+            const items = [];
+            const rows = document.querySelectorAll('.row');
+            for(let r of rows) {
+                if(r.querySelector('.row-body').classList.contains('hidden')) {
+                    items.push({
+                        name: r.querySelector('.sys').value,
+                        score: r.querySelector('.rating').dataset.val,
+                        comment: r.querySelector('.comm').value,
+                        photoBase64: r.querySelector('.photo').dataset.b64 || ""
+                    });
+                } else { return showMsg("Сначала сверните все карточки!", true); }
             }
 
-            // Если всё ок - сворачиваем и красим в зелёный
-            vibrate('success');
-            row.querySelector('.issue-body').classList.add('hidden');
-            const header = row.querySelector('.issue-header');
-            header.classList.remove('bg-indigo-50', 'hover:bg-indigo-100');
-            header.classList.add('bg-green-50', 'hover:bg-green-100');
-            row.querySelector('.issue-title').classList.replace('text-indigo-700', 'text-green-700');
-            row.querySelector('.issue-title i').className = "fas fa-check-circle mr-2 text-lg text-green-500";
-        }
-
-        function toggleIssue(header, event) {
-            if (event.target.closest('button')) return;
-            vibrate('light');
-            const row = header.closest('.issue-row');
-            const body = row.querySelector('.issue-body');
-            if (body.classList.contains('hidden')) {
-                body.classList.remove('hidden');
-                header.classList.remove('bg-green-50', 'hover:bg-green-100');
-                header.classList.add('bg-indigo-50', 'hover:bg-indigo-100');
-                row.querySelector('.issue-title').classList.replace('text-green-700', 'text-indigo-700');
-                row.querySelector('.issue-title i').className = "fas fa-edit mr-2 text-lg text-indigo-500";
-            } else { attemptCollapse(row.querySelector('.collapse-btn')); }
-        }
-
-        function addIssueRow() {
-            vibrate('light');
-            document.getElementById('allGoodBtn').classList.add('hidden'); document.getElementById('saveRoomBtn').classList.remove('hidden');
-            // При добавлении новой, старые открытые ПЫТАЮТСЯ свернуться (если заполнены)
-            document.querySelectorAll('.issue-body:not(.hidden)').forEach(body => { 
-                const btn = body.querySelector('.collapse-btn');
-                attemptCollapse(btn); 
-            });
-
-            const temp = document.getElementById('issueTemplate').content.cloneNode(true);
-            applyTranslations(temp);
-            const select = temp.querySelector('.system-select');
-            let opts = `<option value="" disabled selected>${T.selectDefault}</option>`;
-            for (const cat in state.categories) {
-                opts += `<optgroup label="--- ${cat.toUpperCase()} ---">`;
-                state.categories[cat].forEach(sys => opts += `<option value="${sys}">${sys}</option>`);
-                opts += `</optgroup>`;
-            }
-            opts += `<option value="OTHER">${T.otherOption}</option>`;
-            select.innerHTML = opts; document.getElementById('issuesList').appendChild(temp);
-        }
-
-        async function removeIssue(btn, event) {
-            if(event) event.stopPropagation(); 
-            if(await appConfirm(isHebrew ? "למחוק תקלה זו?" : "Удалить эту неисправность?")) {
-                vibrate('medium'); btn.closest('.issue-row').remove();
-                if (document.querySelectorAll('.issue-row').length === 0) {
-                    document.getElementById('allGoodBtn').classList.remove('hidden'); document.getElementById('saveRoomBtn').classList.add('hidden');
-                }
-            }
-        }
-
-        function toggleCustomInput(sel) {
-            const inp = sel.parentElement.querySelector('.custom-system-input');
-            if (sel.value === 'OTHER') { inp.classList.remove('hidden'); inp.focus(); } else { inp.classList.add('hidden'); inp.value = ''; }
-        }
-
-        function setRating(btn, val) {
-            vibrate('light');
-            const parent = btn.parentElement;
-            parent.classList.remove('error-shake');
-            parent.querySelectorAll('.status-btn').forEach(b => b.classList.remove('selected', 'ring-4', 'ring-gray-300'));
-            btn.classList.add('selected', 'ring-4', 'ring-gray-300');
-            parent.dataset.val = val;
-        }
-
-        async function handlePhoto(input) {
-            const file = input.files[0]; if(!file) return;
-            vibrate('light');
-            const icon = input.closest('label').querySelector('i');
-            icon.className = "fas fa-spinner fa-spin text-indigo-500 text-2xl mb-1";
-            const base64 = await new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-                        const scale = 800 / img.width; canvas.width = 800; canvas.height = img.height * scale;
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', 0.6)); 
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-            input.dataset.base64 = base64;
-            icon.className = "fas fa-camera text-green-500 text-2xl mb-1";
-            input.closest('.issue-row').querySelector('.photo-indicator').classList.remove('hidden');
-            vibrate('success');
-        }
-
-        async function saveRoomData(isAllGood) {
-            vibrate('light');
-            const items = []; let historyLog = []; 
-            if (!isAllGood) {
-                const rows = document.querySelectorAll('.issue-row');
-                for(let row of rows) {
-                    let sys = row.querySelector('.system-select').value;
-                    if(sys === 'OTHER') sys = row.querySelector('.custom-system-input').value.trim();
-                    const rBlock = row.querySelector('.rating-block');
-                    const rating = rBlock ? rBlock.dataset.val : null;
-                    const comment = row.querySelector('.comment-text').value.trim();
-                    
-                    if(!sys || !rating || !comment) {
-                        // Если юзер нажал "Сохранить", но забыл заполнить поля - трясем карточку
-                        row.querySelector('.issue-body').classList.remove('hidden'); // разворачиваем обратно
-                        attemptCollapse(row.querySelector('.collapse-btn')); // вызовет красную тряску
-                        return; // прерываем сохранение
-                    }
-                    items.push({ name: sys, score: rating, comment: comment, photoBase64: row.querySelector('.photo-input').dataset.base64 || "" });
-                    const actionTextHE = rating == 1 ? "החלפה" : "תיקון"; 
-                    historyLog.push(`• ${sys} (${actionTextHE})`);
-                }
-            } else { historyLog.push("✅ הכל תקין"); }
-
-            showLoader(T.syncText);
+            document.getElementById('loader').classList.remove('hidden');
             try {
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ inspector: state.inspector, department: state.department, room: state.currentRoom, items: items }) });
-                const out = await res.json();
-                if (out.status === "error") { return appAlert("ОШИБКА БАЗЫ ДАННЫХ:\n" + out.message); }
-                state.inspectedRooms[state.currentRoom] = historyLog; saveSession(); updateInspectedUI();
-                document.getElementById('activeRoomBlock').classList.add('hidden'); document.getElementById('roomName').value = '';
-                document.getElementById('roomDetailsDisplay').classList.add('hidden'); window.scrollTo(0, 0); vibrate('success');
-            } catch(e) { appAlert("Сбой интернета. Проверьте сеть и нажмите 'Сохранить' еще раз."); } finally { hideLoader(); }
+                await fetch(API, { method: 'POST', body: JSON.stringify({ inspector: state.ins, department: state.dept, room: state.room, items: items }) });
+                state.results[state.room] = items;
+                showMsg("Сохранено!");
+                document.getElementById('roomWorkArea').classList.add('hidden');
+                document.getElementById('roomName').value = '';
+            } catch(e) { showMsg("Ошибка сети!", true); }
+            document.getElementById('loader').classList.add('hidden');
         }
 
-        function updateInspectedUI() {
-            const listDiv = document.getElementById('inspectedRoomsList'); const rooms = Object.keys(state.inspectedRooms);
-            if(rooms.length > 0) listDiv.innerHTML = '';
-            rooms.forEach(room => {
-                const badge = document.createElement('button');
-                badge.className = "room-badge bg-indigo-100 border border-indigo-200 text-indigo-800 px-4 py-2 rounded-xl shadow-sm hover:bg-indigo-200 active:scale-95 transition-transform";
-                badge.innerText = room; badge.onclick = (e) => { vibrate('light'); showRoomHistory(room, e.currentTarget); }; listDiv.appendChild(badge);
-            });
+        function hPhoto(inp) {
+            const file = inp.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => { inp.dataset.b64 = e.target.result; inp.closest('label').classList.add('bg-green-100'); };
+            reader.readAsDataURL(file);
         }
 
-        function showRoomHistory(roomName, badgeElement) {
-            const history = state.inspectedRooms[roomName]; const display = document.getElementById('roomDetailsDisplay');
-            document.querySelectorAll('.room-badge').forEach(b => b.classList.remove('ring-2', 'ring-indigo-600'));
-            if(badgeElement) badgeElement.classList.add('ring-2', 'ring-indigo-600');
-            let html = `<h5 class="font-black text-indigo-700 mb-2 border-b border-indigo-200 pb-2">${T.detailsTitle} ${roomName}:</h5><ul class="space-y-1">`;
-            history.forEach(item => { html += `<li class="text-sm font-bold text-gray-700">${item}</li>`; }); html += `</ul>`;
-            display.innerHTML = html; display.classList.remove('hidden');
+        async function finish() {
+            if(!Object.keys(state.results).length) return showMsg("Нет данных!", true);
+            document.getElementById('loader').classList.remove('hidden');
+            const report = "Отчет завершен инспектором " + state.ins;
+            await fetch(API, { method: 'POST', body: JSON.stringify({ action: "FINISH_DEPT", reportText: report }) });
+            showMsg("Отправлено в ТГ!");
+            location.reload();
         }
-
-        async function finishDepartment() {
-            vibrate('light');
-            if (!document.getElementById('activeRoomBlock').classList.contains('hidden')) return appAlert(T.alertUnsavedRoom);
-            const roomKeys = Object.keys(state.inspectedRooms);
-            if(roomKeys.length === 0) return appAlert(isHebrew ? "לא נבדקו חדרים!" : "Вы не проверили ни одной комнаты!");
-            if(!(await appConfirm(isHebrew ? "לסיים ולשלוח דיווח לטלגרם?" : "Завершить и отправить отчет в Telegram?"))) return;
-            
-            let report = `🏥 *דוח מחלקה: ${state.department}*\n👤 בודק: ${state.inspector}\n\n`;
-            let defects = []; let okRooms = [];
-            for (const [room, issues] of Object.entries(state.inspectedRooms)) {
-                if (issues.length === 1 && issues[0].includes("תקין")) okRooms.push(room);
-                else defects.push(`*חדר ${room}:*\n${issues.join('\n')}`);
-            }
-            if (defects.length > 0) report += `⚠️ *תקלות שנמצאו:*\n${defects.join('\n\n')}\n\n`;
-            else report += `✅ *כל החדרים שנבדקו תקינים!*\n\n`;
-            report += `📊 *סטטיסטיקה:*\nסה"כ נבדקו: ${roomKeys.length} חדרים.`;
-            if (okRooms.length > 0) report += `\nללא הערות: ${okRooms.join(', ')}`;
-
-            showLoader(isHebrew ? "שולח..." : "Отправка...");
-            try {
-                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: "FINISH_DEPT", reportText: report }) });
-                const out = await res.json();
-                if (out.status === "error") { return appAlert("ОШИБКА TELEGRAM: " + out.message); }
-                vibrate('success'); await appAlert(isHebrew ? "✅ הדוח נשלח בהצלחה!" : "✅ Отчет отправлен успешно!"); clearSession(); 
-            } catch (e) { appAlert(isHebrew ? "שגיאת רשת. נסה שוב." : "Ошибка интернета. Попробуйте еще раз."); } finally { hideLoader(); }
-        }
-
-        function navigate(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-        function showLoader(txt) { document.getElementById('loaderText').innerText = txt; document.getElementById('loader').classList.remove('hidden'); }
-        function hideLoader() { document.getElementById('loader').classList.add('hidden'); }
     </script>
 </body>
 </html>
