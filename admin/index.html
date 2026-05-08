@@ -12,7 +12,7 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Стили для печати Рабочего задания */
+        /* Стили для печати Заданий Рабочего */
         @media print {
             body { background: white; padding: 0 !important; }
             .no-print { display: none !important; }
@@ -23,10 +23,11 @@
             .signature-box { border-top: 1px dashed #000; margin-top: 15px; padding-top: 10px; display: flex; justify-content: space-between; font-size: 14px;}
         }
 
-        /* Стили для печати Отчета Руководителя (в виде таблицы) */
+        /* Стили для печати Отчета Руководителя */
         .manager-report-mode .task-card { display: none !important; }
-        .manager-report-mode #managerTable { display: table !important; width: 100%; border-collapse: collapse; }
-        .manager-report-mode #managerTable th, .manager-report-mode #managerTable td { border: 1px solid #000; padding: 8px; text-align: right; }
+        .manager-report-mode #managerTable { display: table !important; width: 100%; border-collapse: collapse; margin-top: 20px;}
+        .manager-report-mode #managerTable th, .manager-report-mode #managerTable td { border: 1px solid #000; padding: 10px; text-align: right; }
+        .manager-report-mode #managerTable th { background-color: #e5e7eb; font-weight: bold;}
     </style>
 </head>
 <body class="text-gray-800">
@@ -82,15 +83,15 @@
             <button onclick="switchTab('ליקויים')" id="tab-ליקויים" class="tab-btn flex-1 py-4 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-clipboard-list text-blue-500 ml-2"></i>כללי (ליקויים)</button>
         </div>
 
-        <table id="managerTable" class="hidden print-only w-full border-collapse">
+        <table id="managerTable" class="hidden print-only">
             <thead>
-                <tr class="bg-gray-200">
-                    <th class="border p-2">תאריך פתיחה</th>
-                    <th class="border p-2">מחלקה</th>
-                    <th class="border p-2">חדר</th>
-                    <th class="border p-2">מהות הליקוי</th>
-                    <th class="border p-2">פעולה נדרשת</th>
-                </tr>
+                <tr>
+                    <th>תאריך פתיחה</th>
+                    <th>מחלקה</th>
+                    <th>חדר</th>
+                    <th>מהות הליקוי</th>
+                    <th>פעולה נדרשת</th>
+                    <th>אישור ביצוע / הערות</th> </tr>
             </thead>
             <tbody id="managerTableBody"></tbody>
         </table>
@@ -112,7 +113,6 @@
             } else { document.getElementById('pinError').classList.remove('hidden'); }
         }
 
-        // Фикс старых ссылок картинок на лету
         function fixImageUrl(url) {
             if(!url) return "";
             if(url.includes('/view')) {
@@ -129,7 +129,6 @@
                 const data = await res.json();
                 allTasks = data.tasks || [];
                 
-                // Заполняем фильтр отделений
                 const depts = [...new Set(allTasks.map(t => t.dept))].filter(Boolean);
                 const select = document.getElementById('filterDept');
                 select.innerHTML = '<option value="ALL">כל המחלקות</option>';
@@ -159,19 +158,16 @@
             container.innerHTML = ''; tbody.innerHTML = '';
             
             const filterDept = document.getElementById('filterDept').value;
-            const filterDate = document.getElementById('filterDate').value; // Формат YYYY-MM-DD
+            const filterDate = document.getElementById('filterDate').value;
 
             let filtered = allTasks.filter(t => t.sheet === currentTab);
 
-            // Применяем фильтр по отделению
             if(filterDept !== "ALL") { filtered = filtered.filter(t => t.dept === filterDept); }
             
-            // Применяем фильтр по дате (показываем всё, что было создано ПОСЛЕ или В день выбранной даты)
             if(filterDate) {
                 const selectedDate = new Date(filterDate);
                 filtered = filtered.filter(t => {
-                    // Конвертируем строку даты из Google (dd/MM/yyyy HH:mm:ss) в JS Date
-                    const parts = t.dateStr.split(" ")[0].split("/");
+                    const parts = t.dateStr.split(" ")[0].split("/"); // ДД/ММ/ГГГГ
                     if(parts.length === 3) {
                         const taskDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
                         return taskDate >= selectedDate;
@@ -189,13 +185,13 @@
                 const actionColor = task.actionType == 1 ? "text-red-600 bg-red-100" : "text-orange-600 bg-orange-100";
                 const actionText = task.actionType == 1 ? "החלפה" : "תיקון";
                 const cleanPic = fixImageUrl(task.photo);
+                const displayDate = task.dateStr.split(" ")[0]; // Оставляем только ДД/ММ/ГГГГ
                 
                 const photoHtml = cleanPic ? 
                     `<a href="${cleanPic}" target="_blank" class="no-print"><img src="${cleanPic}" class="w-24 h-24 object-cover rounded-xl border"></a>
                      <img src="${cleanPic}" class="hidden print-only print-photo">` : 
                     `<div class="w-24 h-24 bg-gray-100 rounded-xl border flex items-center justify-center text-gray-400"><i class="fas fa-image text-2xl"></i></div>`;
 
-                // Карточка
                 const html = `
                 <div class="task-card bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-5">
                     <div class="flex-shrink-0 flex justify-center">${photoHtml}</div>
@@ -207,7 +203,7 @@
                         </div>
                         <p class="font-bold text-lg mb-1"><i class="fas fa-wrench text-gray-400 ml-2"></i>${task.defect}</p>
                         ${task.comment ? `<p class="text-gray-600 mb-2"><i class="fas fa-comment-alt text-gray-400 ml-2"></i>${task.comment}</p>` : ''}
-                        <p class="text-xs text-gray-400 mt-2"><i class="fas fa-calendar-alt ml-1"></i> נפתח: ${task.dateStr}</p>
+                        <p class="text-xs text-gray-400 mt-2"><i class="fas fa-calendar-alt ml-1"></i> נפתח: ${displayDate}</p>
                         
                         <div class="hidden print-only signature-box">
                             <div>שם המבצע: ____________</div>
@@ -224,15 +220,15 @@
                 </div>`;
                 container.innerHTML += html;
 
-                // Строка для отчета руководителя
+                // Строка для Отчета Руководителя
                 tbody.innerHTML += `
                 <tr>
-                    <td class="border p-2">${task.dateStr.split(" ")[0]}</td>
-                    <td class="border p-2 font-bold">${task.dept}</td>
-                    <td class="border p-2">${task.room}</td>
-                    <td class="border p-2">${task.defect}</td>
-                    <td class="border p-2 ${task.actionType == 1 ? 'text-red-600' : 'text-orange-600'} font-bold">${actionText}</td>
-                </tr>`;
+                    <td>${displayDate}</td>
+                    <td class="font-bold">${task.dept}</td>
+                    <td>${task.room}</td>
+                    <td>${task.defect}</td>
+                    <td class="${task.actionType == 1 ? 'text-red-600' : 'text-orange-600'} font-bold">${actionText}</td>
+                    <td class="w-40"></td> </tr>`;
             });
         }
 
@@ -242,11 +238,10 @@
             const btn = document.getElementById(`btn-${index}`);
             const originalHtml = btn.innerHTML;
             
-            // Визуально закрываем сразу (ОТВЕТ НА ПУНКТ ИЗ ТЗ)
-            btn.innerHTML = '<i class="fas fa-lock"></i> סגור';
+            btn.innerHTML = '<i class="fas fa-lock"></i> נסגר';
             btn.className = "w-full bg-gray-200 text-gray-500 border-2 border-gray-200 py-3 rounded-xl font-bold cursor-not-allowed flex justify-center items-center gap-2";
             btn.disabled = true;
-            document.getElementById(`btn-${index}`).closest('.task-card').classList.add('opacity-60');
+            document.getElementById(`btn-${index}`).closest('.task-card').classList.add('opacity-50');
             
             try {
                 const res = await fetch(API_URL, {
@@ -263,7 +258,7 @@
                 btn.innerHTML = originalHtml;
                 btn.className = "w-full bg-green-50 text-green-600 border-2 border-green-500 py-3 rounded-xl font-bold hover:bg-green-500 hover:text-white transition-colors flex justify-center items-center gap-2";
                 btn.disabled = false;
-                document.getElementById(`btn-${index}`).closest('.task-card').classList.remove('opacity-60');
+                document.getElementById(`btn-${index}`).closest('.task-card').classList.remove('opacity-50');
             }
         }
 
@@ -277,7 +272,7 @@
             document.body.classList.add('manager-report-mode');
             document.getElementById('printTitle').innerText = `דוח מנהל (תקלות פתוחות) - ${currentTab}`;
             window.print();
-            setTimeout(() => document.body.classList.remove('manager-report-mode'), 1000); // Возвращаем обратно после окна печати
+            setTimeout(() => document.body.classList.remove('manager-report-mode'), 1000); 
         }
     </script>
 </body>
