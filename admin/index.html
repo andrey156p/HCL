@@ -1,28 +1,32 @@
-
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления HCL</title>
+    <title>HCL - לוח בקרה</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .tab-btn.active { border-bottom: 4px solid #4f46e5; color: #4f46e5; font-weight: bold; }
+        .tab-btn.active { border-bottom: 4px solid #4f46e5; color: #4f46e5; font-weight: bold; background-color: white;}
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Стили для PDF печати */
+        /* Стили для печати Рабочего задания */
         @media print {
-            body { background: white; }
+            body { background: white; padding: 0 !important; }
             .no-print { display: none !important; }
             .print-only { display: block !important; }
-            .task-card { break-inside: avoid; border: 1px solid #000; box-shadow: none; margin-bottom: 10px; }
-            .print-header { font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; }
-            .print-photo { width: 100px; height: 100px; object-fit: cover; border: 1px solid #ccc; }
-            .signature-box { border-top: 1px dashed #000; margin-top: 20px; padding-top: 10px; text-align: left; }
+            .task-card { break-inside: avoid; border: 1px solid #000; box-shadow: none; margin-bottom: 15px; page-break-inside: avoid; }
+            .print-header { font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; text-decoration: underline; }
+            .print-photo { width: 100px; height: 100px; object-fit: cover; border: 1px solid #ccc; border-radius: 8px;}
+            .signature-box { border-top: 1px dashed #000; margin-top: 15px; padding-top: 10px; display: flex; justify-content: space-between; font-size: 14px;}
         }
+
+        /* Стили для печати Отчета Руководителя (в виде таблицы) */
+        .manager-report-mode .task-card { display: none !important; }
+        .manager-report-mode #managerTable { display: table !important; width: 100%; border-collapse: collapse; }
+        .manager-report-mode #managerTable th, .manager-report-mode #managerTable td { border: 1px solid #000; padding: 8px; text-align: right; }
     </style>
 </head>
 <body class="text-gray-800">
@@ -30,34 +34,66 @@
     <div id="loginScreen" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50 no-print">
         <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center">
             <i class="fas fa-lock text-indigo-600 text-5xl mb-4"></i>
-            <h2 class="text-2xl font-black mb-6">Админ-панель</h2>
-            <input type="password" id="pinCode" placeholder="Введите PIN-код" class="w-full p-4 mb-4 bg-gray-50 border rounded-xl text-center text-2xl font-bold tracking-widest focus:ring-2 focus:ring-indigo-500 outline-none">
-            <button onclick="checkPin()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg">Войти</button>
-            <p id="pinError" class="text-red-500 font-bold mt-2 hidden">Неверный PIN-код!</p>
+            <h2 class="text-2xl font-black mb-6">כניסת מנהל</h2>
+            <input type="password" id="pinCode" placeholder="קוד גישה" class="w-full p-4 mb-4 bg-gray-50 border rounded-xl text-center text-2xl font-bold tracking-widest focus:ring-2 focus:ring-indigo-500 outline-none">
+            <button onclick="checkPin()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg">כניסה</button>
+            <p id="pinError" class="text-red-500 font-bold mt-2 hidden">קוד שגוי!</p>
         </div>
     </div>
 
     <div id="loader" class="fixed inset-0 bg-white/90 hidden z-40 flex items-center justify-center no-print">
-        <div class="flex flex-col items-center"><div class="loader mb-4"></div><p class="font-bold text-indigo-600">Синхронизация...</p></div>
+        <div class="flex flex-col items-center"><div class="loader mb-4"></div><p class="font-bold text-indigo-600">מעדכן נתונים...</p></div>
     </div>
 
     <div id="mainApp" class="hidden max-w-5xl mx-auto p-4 md:p-6 print:p-0 print:max-w-full">
         
-        <div class="flex justify-between items-center mb-6 no-print">
-            <h1 class="text-3xl font-black text-gray-800">Задания <span class="text-indigo-600">HCL</span></h1>
-            <div class="flex gap-2">
-                <button onclick="window.print()" class="bg-gray-800 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-700 shadow-lg"><i class="fas fa-print mr-2"></i> Печать (PDF)</button>
-                <button onclick="loadTasks()" class="bg-indigo-100 text-indigo-700 px-4 py-3 rounded-xl font-bold hover:bg-indigo-200"><i class="fas fa-sync-alt"></i></button>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-6 no-print">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 border-b pb-4">
+                <h1 class="text-3xl font-black text-gray-800 mb-4 md:mb-0">לוח בקרה <span class="text-indigo-600">HCL</span></h1>
+                <div class="flex gap-2 flex-wrap justify-center">
+                    <button onclick="printTasks()" class="bg-gray-800 text-white px-5 py-2 rounded-xl font-bold hover:bg-gray-700"><i class="fas fa-print ml-2"></i>הדפסת משימות</button>
+                    <button onclick="printManagerReport()" class="bg-green-600 text-white px-5 py-2 rounded-xl font-bold hover:bg-green-500"><i class="fas fa-file-alt ml-2"></i>דוח מנהל</button>
+                    <button onclick="loadTasks()" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl font-bold hover:bg-indigo-200"><i class="fas fa-sync-alt"></i></button>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-bold text-gray-500 mb-1">מחלקה</label>
+                    <select id="filterDept" onchange="renderTasks()" class="w-full p-3 bg-gray-50 border rounded-xl font-bold outline-none">
+                        <option value="ALL">כל המחלקות</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-bold text-gray-500 mb-1">מתאריך (החל מ)</label>
+                    <input type="date" id="filterDate" onchange="renderTasks()" class="w-full p-3 bg-gray-50 border rounded-xl font-bold outline-none">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="resetFilters()" class="w-full md:w-auto px-6 py-3 bg-red-100 text-red-600 rounded-xl font-bold hover:bg-red-200">נקה סינון</button>
+                </div>
             </div>
         </div>
 
-        <div class="hidden print-only print-header">רשימת משימות - HCL תחזוקה</div>
+        <div class="hidden print-only print-header" id="printTitle">רשימת משימות לתחזוקה - HCL</div>
 
         <div class="flex bg-white rounded-2xl shadow-sm mb-6 overflow-hidden no-print">
             <button onclick="switchTab('חשמל')" id="tab-חשמל" class="tab-btn active flex-1 py-4 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-bolt text-yellow-500 ml-2"></i>חשמל</button>
             <button onclick="switchTab('בינוי_ודלתות')" id="tab-בינוי_ודלתות" class="tab-btn flex-1 py-4 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-hammer text-orange-500 ml-2"></i>בינוי ודלתות</button>
-            <button onclick="switchTab('ליקויים')" id="tab-ליקויים" class="tab-btn flex-1 py-4 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-clipboard-list text-blue-500 ml-2"></i>ליקויים (כללי)</button>
+            <button onclick="switchTab('ליקויים')" id="tab-ליקויים" class="tab-btn flex-1 py-4 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-clipboard-list text-blue-500 ml-2"></i>כללי (ליקויים)</button>
         </div>
+
+        <table id="managerTable" class="hidden print-only w-full border-collapse">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="border p-2">תאריך פתיחה</th>
+                    <th class="border p-2">מחלקה</th>
+                    <th class="border p-2">חדר</th>
+                    <th class="border p-2">מהות הליקוי</th>
+                    <th class="border p-2">פעולה נדרשת</th>
+                </tr>
+            </thead>
+            <tbody id="managerTableBody"></tbody>
+        </table>
 
         <div id="tasksContainer" class="space-y-4"></div>
 
@@ -69,14 +105,21 @@
         let currentTab = "חשמל";
 
         function checkPin() {
-            const pin = document.getElementById('pinCode').value;
-            if(pin === "1234") { // ПАРОЛЬ ДЛЯ ВХОДА (можете поменять)
+            if(document.getElementById('pinCode').value === "1234") { 
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
                 loadTasks();
-            } else {
-                document.getElementById('pinError').classList.remove('hidden');
+            } else { document.getElementById('pinError').classList.remove('hidden'); }
+        }
+
+        // Фикс старых ссылок картинок на лету
+        function fixImageUrl(url) {
+            if(!url) return "";
+            if(url.includes('/view')) {
+                const match = url.match(/d\/([a-zA-Z0-9-_]+)/);
+                if(match) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
             }
+            return url;
         }
 
         async function loadTasks() {
@@ -85,8 +128,15 @@
                 const res = await fetch(`${API_URL}?action=getOpenTasks`);
                 const data = await res.json();
                 allTasks = data.tasks || [];
+                
+                // Заполняем фильтр отделений
+                const depts = [...new Set(allTasks.map(t => t.dept))].filter(Boolean);
+                const select = document.getElementById('filterDept');
+                select.innerHTML = '<option value="ALL">כל המחלקות</option>';
+                depts.forEach(d => select.innerHTML += `<option value="${d}">${d}</option>`);
+
                 renderTasks();
-            } catch(e) { alert("Ошибка загрузки данных!"); }
+            } catch(e) { alert("שגיאה בטעינת נתונים!"); }
             document.getElementById('loader').classList.add('hidden');
         }
 
@@ -97,79 +147,137 @@
             renderTasks();
         }
 
+        function resetFilters() {
+            document.getElementById('filterDept').value = "ALL";
+            document.getElementById('filterDate').value = "";
+            renderTasks();
+        }
+
         function renderTasks() {
             const container = document.getElementById('tasksContainer');
-            container.innerHTML = '';
+            const tbody = document.getElementById('managerTableBody');
+            container.innerHTML = ''; tbody.innerHTML = '';
             
-            const filtered = allTasks.filter(t => t.sheet === currentTab);
+            const filterDept = document.getElementById('filterDept').value;
+            const filterDate = document.getElementById('filterDate').value; // Формат YYYY-MM-DD
+
+            let filtered = allTasks.filter(t => t.sheet === currentTab);
+
+            // Применяем фильтр по отделению
+            if(filterDept !== "ALL") { filtered = filtered.filter(t => t.dept === filterDept); }
+            
+            // Применяем фильтр по дате (показываем всё, что было создано ПОСЛЕ или В день выбранной даты)
+            if(filterDate) {
+                const selectedDate = new Date(filterDate);
+                filtered = filtered.filter(t => {
+                    // Конвертируем строку даты из Google (dd/MM/yyyy HH:mm:ss) в JS Date
+                    const parts = t.dateStr.split(" ")[0].split("/");
+                    if(parts.length === 3) {
+                        const taskDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                        return taskDate >= selectedDate;
+                    }
+                    return true;
+                });
+            }
             
             if(filtered.length === 0) {
-                container.innerHTML = '<div class="text-center p-10 text-gray-400 font-bold"><i class="fas fa-check-circle text-5xl mb-4"></i><p>Все задания выполнены!</p></div>';
+                container.innerHTML = '<div class="text-center p-10 text-gray-400 font-bold bg-white rounded-2xl"><i class="fas fa-check-circle text-5xl mb-4"></i><p>אין משימות פתוחות לסינון זה!</p></div>';
                 return;
             }
 
             filtered.forEach((task, index) => {
                 const actionColor = task.actionType == 1 ? "text-red-600 bg-red-100" : "text-orange-600 bg-orange-100";
                 const actionText = task.actionType == 1 ? "החלפה" : "תיקון";
-                const photoHtml = task.photo ? `<a href="${task.photo}" target="_blank" class="no-print"><img src="${task.photo}" class="w-20 h-20 object-cover rounded-xl border"></a> <img src="${task.photo}" class="hidden print-only print-photo">` : `<div class="w-20 h-20 bg-gray-100 rounded-xl border flex items-center justify-center text-gray-400"><i class="fas fa-image"></i></div>`;
+                const cleanPic = fixImageUrl(task.photo);
+                
+                const photoHtml = cleanPic ? 
+                    `<a href="${cleanPic}" target="_blank" class="no-print"><img src="${cleanPic}" class="w-24 h-24 object-cover rounded-xl border"></a>
+                     <img src="${cleanPic}" class="hidden print-only print-photo">` : 
+                    `<div class="w-24 h-24 bg-gray-100 rounded-xl border flex items-center justify-center text-gray-400"><i class="fas fa-image text-2xl"></i></div>`;
 
+                // Карточка
                 const html = `
-                <div class="task-card bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4" id="task-${index}">
-                    <div class="flex-shrink-0">${photoHtml}</div>
+                <div class="task-card bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-5">
+                    <div class="flex-shrink-0 flex justify-center">${photoHtml}</div>
                     
                     <div class="flex-grow">
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="text-xl font-black text-gray-800">${task.dept} | חדר: <span class="text-indigo-600">${task.room}</span></h3>
+                        <div class="flex justify-between items-start mb-2 border-b pb-2">
+                            <h3 class="text-xl font-black text-gray-800">${task.dept} <span class="text-gray-400 mx-2">|</span> חדר: <span class="text-indigo-600">${task.room}</span></h3>
                             <span class="px-3 py-1 rounded-lg font-bold text-sm ${actionColor}">${actionText}</span>
                         </div>
                         <p class="font-bold text-lg mb-1"><i class="fas fa-wrench text-gray-400 ml-2"></i>${task.defect}</p>
-                        <p class="text-gray-600 mb-2"><i class="fas fa-comment-alt text-gray-400 ml-2"></i>${task.comment}</p>
-                        <p class="text-xs text-gray-400">נפתח: ${task.date}</p>
+                        ${task.comment ? `<p class="text-gray-600 mb-2"><i class="fas fa-comment-alt text-gray-400 ml-2"></i>${task.comment}</p>` : ''}
+                        <p class="text-xs text-gray-400 mt-2"><i class="fas fa-calendar-alt ml-1"></i> נפתח: ${task.dateStr}</p>
                         
                         <div class="hidden print-only signature-box">
-                            <div class="flex justify-between mt-2">
-                                <span>שם המבצע: ____________</span>
-                                <span>חתימה: ____________</span>
-                                <span>תאריך: ____________</span>
-                            </div>
+                            <div>שם המבצע: ____________</div>
+                            <div>חתימה: ____________</div>
+                            <div>תאריך: ____________</div>
                         </div>
                     </div>
                     
-                    <div class="flex items-center justify-center min-w-[150px] no-print">
-                        <button onclick="closeTask('${task.sheet}', '${task.date}', '${task.room}', '${task.defect}', ${index})" class="w-full bg-green-50 text-green-600 border-2 border-green-500 py-3 rounded-xl font-bold hover:bg-green-500 hover:text-white transition-colors">
-                            <i class="fas fa-check mr-2"></i> בוצע
+                    <div class="flex items-center justify-center min-w-[140px] no-print">
+                        <button id="btn-${index}" onclick="closeTask('${task.sheet}', '${task.dateStr}', '${task.room}', '${task.defect}', ${index})" class="w-full bg-green-50 text-green-600 border-2 border-green-500 py-3 rounded-xl font-bold hover:bg-green-500 hover:text-white transition-colors flex justify-center items-center gap-2">
+                            <i class="fas fa-check"></i> סיום טיפול
                         </button>
                     </div>
                 </div>`;
                 container.innerHTML += html;
+
+                // Строка для отчета руководителя
+                tbody.innerHTML += `
+                <tr>
+                    <td class="border p-2">${task.dateStr.split(" ")[0]}</td>
+                    <td class="border p-2 font-bold">${task.dept}</td>
+                    <td class="border p-2">${task.room}</td>
+                    <td class="border p-2">${task.defect}</td>
+                    <td class="border p-2 ${task.actionType == 1 ? 'text-red-600' : 'text-orange-600'} font-bold">${actionText}</td>
+                </tr>`;
             });
         }
 
-        async function closeTask(sheet, date, room, defect, index) {
-            if(!confirm("Отметить задание как выполненное?")) return;
+        async function closeTask(sheet, dateStr, room, defect, index) {
+            if(!confirm("לסגור משימה זו ולהעביר לסטטוס 'סגור'?")) return;
             
-            // Визуально прячем карточку сразу
-            document.getElementById(`task-${index}`).style.opacity = '0.5';
+            const btn = document.getElementById(`btn-${index}`);
+            const originalHtml = btn.innerHTML;
+            
+            // Визуально закрываем сразу (ОТВЕТ НА ПУНКТ ИЗ ТЗ)
+            btn.innerHTML = '<i class="fas fa-lock"></i> סגור';
+            btn.className = "w-full bg-gray-200 text-gray-500 border-2 border-gray-200 py-3 rounded-xl font-bold cursor-not-allowed flex justify-center items-center gap-2";
+            btn.disabled = true;
+            document.getElementById(`btn-${index}`).closest('.task-card').classList.add('opacity-60');
             
             try {
                 const res = await fetch(API_URL, {
                     method: 'POST',
-                    body: JSON.stringify({
-                        action: "CLOSE_TASK",
-                        sheetName: sheet,
-                        date: date,
-                        room: room,
-                        defect: defect
-                    })
+                    body: JSON.stringify({ action: "CLOSE_TASK", sheetName: sheet, date: dateStr, room: room, defect: defect })
                 });
                 
                 const out = await res.json();
                 if(out.status === "success") {
-                    // Удаляем из локального массива и перерисовываем
-                    allTasks = allTasks.filter(t => !(t.sheet === sheet && t.date === date && t.room == room && t.defect === defect));
-                    renderTasks();
-                } else { alert("Ошибка сохранения!"); }
-            } catch(e) { alert("Ошибка связи!"); document.getElementById(`task-${index}`).style.opacity = '1'; }
+                    allTasks = allTasks.filter(t => !(t.sheet === sheet && t.dateStr === dateStr && t.room == room && t.defect === defect));
+                } else { throw new Error(); }
+            } catch(e) { 
+                alert("שגיאת תקשורת! לא נשמר."); 
+                btn.innerHTML = originalHtml;
+                btn.className = "w-full bg-green-50 text-green-600 border-2 border-green-500 py-3 rounded-xl font-bold hover:bg-green-500 hover:text-white transition-colors flex justify-center items-center gap-2";
+                btn.disabled = false;
+                document.getElementById(`btn-${index}`).closest('.task-card').classList.remove('opacity-60');
+            }
+        }
+
+        function printTasks() {
+            document.body.classList.remove('manager-report-mode');
+            document.getElementById('printTitle').innerText = `רשימת עבודה - צוות ${currentTab}`;
+            window.print();
+        }
+
+        function printManagerReport() {
+            document.body.classList.add('manager-report-mode');
+            document.getElementById('printTitle').innerText = `דוח מנהל (תקלות פתוחות) - ${currentTab}`;
+            window.print();
+            setTimeout(() => document.body.classList.remove('manager-report-mode'), 1000); // Возвращаем обратно после окна печати
         }
     </script>
 </body>
