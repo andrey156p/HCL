@@ -12,7 +12,6 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Стили для печати Заданий Рабочего */
         @media print {
             body { background: white; padding: 0 !important; }
             .no-print { display: none !important; }
@@ -23,7 +22,6 @@
             .signature-box { border-top: 1px dashed #000; margin-top: 15px; padding-top: 10px; display: flex; justify-content: space-between; font-size: 14px;}
         }
 
-        /* Стили для печати Отчета Руководителя */
         .manager-report-mode .task-card { display: none !important; }
         .manager-report-mode #managerTable { display: table !important; width: 100%; border-collapse: collapse; margin-top: 20px;}
         .manager-report-mode #managerTable th, .manager-report-mode #managerTable td { border: 1px solid #000; padding: 10px; text-align: right; }
@@ -91,7 +89,8 @@
                     <th>חדר</th>
                     <th>מהות הליקוי</th>
                     <th>פעולה נדרשת</th>
-                    <th>אישור ביצוע / הערות</th> </tr>
+                    <th>אישור ביצוע / הערות</th>
+                </tr>
             </thead>
             <tbody id="managerTableBody"></tbody>
         </table>
@@ -120,6 +119,15 @@
                 if(match) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
             }
             return url;
+        }
+
+        // ВАЖНО: ФУНКЦИЯ ДЛЯ ЗАЩИТЫ ОТ КАВЫЧЕК
+        function escapeString(str) {
+            if (!str) return "";
+            return String(str)
+                .replace(/\\/g, "\\\\")   // Экранируем слеши
+                .replace(/"/g, "&quot;")  // Экранируем двойные кавычки (для HTML)
+                .replace(/'/g, "\\'");    // Экранируем одинарные кавычки (для JS)
         }
 
         async function loadTasks() {
@@ -167,7 +175,7 @@
             if(filterDate) {
                 const selectedDate = new Date(filterDate);
                 filtered = filtered.filter(t => {
-                    const parts = t.dateStr.split(" ")[0].split("/"); // ДД/ММ/ГГГГ
+                    const parts = t.dateStr.split(" ")[0].split("/"); 
                     if(parts.length === 3) {
                         const taskDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
                         return taskDate >= selectedDate;
@@ -185,8 +193,14 @@
                 const actionColor = task.actionType == 1 ? "text-red-600 bg-red-100" : "text-orange-600 bg-orange-100";
                 const actionText = task.actionType == 1 ? "החלפה" : "תיקון";
                 const cleanPic = fixImageUrl(task.photo);
-                const displayDate = task.dateStr.split(" ")[0]; // Оставляем только ДД/ММ/ГГГГ
+                const displayDate = task.dateStr.split(" ")[0]; 
                 
+                // Применяем нашу защитную функцию к данным перед вставкой в кнопку
+                const safeSheet = escapeString(task.sheet);
+                const safeDateStr = escapeString(task.dateStr);
+                const safeRoom = escapeString(task.room);
+                const safeDefect = escapeString(task.defect);
+
                 const photoHtml = cleanPic ? 
                     `<a href="${cleanPic}" target="_blank" class="no-print"><img src="${cleanPic}" class="w-24 h-24 object-cover rounded-xl border"></a>
                      <img src="${cleanPic}" class="hidden print-only print-photo">` : 
@@ -213,14 +227,13 @@
                     </div>
                     
                     <div class="flex items-center justify-center min-w-[140px] no-print">
-                        <button id="btn-${index}" onclick="closeTask('${task.sheet}', '${task.dateStr}', '${task.room}', '${task.defect}', ${index})" class="w-full bg-green-50 text-green-600 border-2 border-green-500 py-3 rounded-xl font-bold hover:bg-green-500 hover:text-white transition-colors flex justify-center items-center gap-2">
+                        <button id="btn-${index}" onclick="closeTask('${safeSheet}', '${safeDateStr}', '${safeRoom}', '${safeDefect}', ${index})" class="w-full bg-green-50 text-green-600 border-2 border-green-500 py-3 rounded-xl font-bold hover:bg-green-500 hover:text-white transition-colors flex justify-center items-center gap-2">
                             <i class="fas fa-check"></i> סיום טיפול
                         </button>
                     </div>
                 </div>`;
                 container.innerHTML += html;
 
-                // Строка для Отчета Руководителя
                 tbody.innerHTML += `
                 <tr>
                     <td>${displayDate}</td>
@@ -228,7 +241,8 @@
                     <td>${task.room}</td>
                     <td>${task.defect}</td>
                     <td class="${task.actionType == 1 ? 'text-red-600' : 'text-orange-600'} font-bold">${actionText}</td>
-                    <td class="w-40"></td> </tr>`;
+                    <td class="w-40"></td>
+                </tr>`;
             });
         }
 
