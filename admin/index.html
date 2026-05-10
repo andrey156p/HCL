@@ -84,7 +84,7 @@
             }
             .print-card-body {
                 display: flex;
-                gap: 15px; /* Отступ между фото и текстом */
+                gap: 15px; 
                 flex-grow: 1;
                 overflow: hidden;
                 align-items: flex-start;
@@ -93,7 +93,7 @@
             /* ВЕРТИКАЛЬНОЕ ФОТО (~2/3 ШИРИНЫ) */
             .print-photo, .print-photo-placeholder {
                 width: 60%; 
-                height: 280px; /* Задаем высоту, чтобы получился вертикальный прямоугольник */
+                height: 280px; 
                 flex-shrink: 0;
                 object-fit: cover;
                 border: 2px solid #cbd5e1;
@@ -236,7 +236,7 @@
             } else { document.getElementById('pinError').classList.remove('hidden'); }
         }
 
-        // КОНВЕРТАЦИЯ ССЫЛОК GOOGLE DRIVE (API THUMBNAIL)
+        // КОНВЕРТАЦИЯ ССЫЛОК GOOGLE DRIVE (Прямая ссылка)
         function fixImageUrl(url) {
             if(!url) return "";
             let fileId = "";
@@ -246,7 +246,7 @@
                 fileId = url.split('/d/')[1].split('/')[0];
             }
             if (fileId) {
-                return `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+                return `https://drive.google.com/uc?id=${fileId}`;
             }
             return url;
         }
@@ -363,7 +363,7 @@
                     <td class="w-40"></td>
                 </tr>`;
 
-                // 3. СБОР ДАННЫХ ДЛЯ ПЕЧАТИ КАРТОЧЕК (Сгруппировано по отделению и дате)
+                // 3. СБОР ДАННЫХ ДЛЯ ПЕЧАТИ КАРТОЧЕК
                 let groupKey = `${task.dept}|${displayDate}`;
                 if(!groupsForPrint[groupKey]) groupsForPrint[groupKey] = [];
                 groupsForPrint[groupKey].push({...task, actionText, cleanPic});
@@ -447,7 +447,6 @@
         function printTasks() {
             document.body.classList.remove('manager-report-mode');
             document.body.classList.add('task-print-mode');
-            // Даем браузеру 100мс на отрисовку сетки
             setTimeout(() => { window.print(); }, 100);
         }
 
