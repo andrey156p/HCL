@@ -12,83 +12,116 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* === МАГИЯ ПЕЧАТИ (СТРОГИЙ A4) === */
+        /* === ИДЕАЛЬНАЯ ПЕЧАТЬ А4 (СЕТКА 2x2) === */
         @media print {
-            body { background: white; margin: 0; padding: 0 !important; }
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
+            @page { size: A4 portrait; margin: 0; }
+            body { background: white; margin: 0; padding: 0 !important; -webkit-print-color-adjust: exact; }
             
-            /* Настройки печатной страницы */
+            /* Скрываем всё лишнее */
+            .no-print { display: none !important; }
+            
+            /* По умолчанию таблица руководителя скрыта */
+            #managerTable { display: none !important; }
+            
+            /* Настройки листа А4 */
             .print-page {
-                page-break-after: always;
-                border: 3px solid #000; /* Рамка на весь лист */
-                padding: 20px;
-                margin: 0;
-                height: 285mm; /* Высота почти А4 */
+                width: 210mm;
+                height: 296mm;
+                padding: 12mm;
                 box-sizing: border-box;
+                page-break-after: always;
                 display: flex;
                 flex-direction: column;
+                background: white;
             }
             .print-page-header {
-                font-size: 20px;
+                font-size: 22px;
                 font-weight: bold;
                 text-align: center;
-                border-bottom: 2px solid #000;
-                padding-bottom: 10px;
-                margin-bottom: 15px;
+                border-bottom: 3px solid #000;
+                padding-bottom: 8px;
+                margin-bottom: 12px;
+                flex-shrink: 0;
             }
+            
+            /* Сетка 2 на 2 */
             .print-cards-grid {
                 display: grid;
-                grid-template-rows: repeat(4, 1fr); /* Ровно 4 блока на лист */
+                grid-template-columns: 1fr 1fr; /* 2 колонки */
+                grid-template-rows: 1fr 1fr;    /* 2 строки */
+                gap: 12mm; /* Отступы между карточками */
+                flex-grow: 1;
+            }
+            
+            /* Сам квадрат (карточка) */
+            .print-card {
+                border: 2px solid #000;
+                border-radius: 12px;
+                padding: 15px;
+                display: flex;
+                flex-direction: column;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+            .print-card-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 2px solid #ccc;
+                padding-bottom: 10px;
+                margin-bottom: 10px;
+            }
+            .print-card-body {
+                display: flex;
                 gap: 15px;
                 flex-grow: 1;
             }
-            .print-card {
-                border: 2px dashed #888; /* Рамка вокруг каждой задачи */
-                padding: 15px;
-                display: flex;
-                gap: 20px;
-                border-radius: 8px;
-            }
-            .print-photo {
-                width: 120px;
-                height: 120px;
+            
+            /* Фотографии */
+            .print-photo, .print-photo-placeholder {
+                width: 130px;
+                height: 130px;
+                flex-shrink: 0;
                 object-fit: cover;
-                border: 1px solid #000;
+                border: 2px solid #ddd;
                 border-radius: 8px;
             }
             .print-photo-placeholder {
-                width: 120px;
-                height: 120px;
-                background: #f3f4f6;
-                border: 1px solid #ccc;
-                border-radius: 8px;
+                background: #f9fafb;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 color: #aaa;
                 font-weight: bold;
+                text-align: center;
+                font-size: 14px;
             }
-            .print-card-content {
+            
+            /* Текст задания */
+            .print-info {
                 flex-grow: 1;
                 display: flex;
                 flex-direction: column;
             }
+            
+            /* Подвал с подписями */
             .signature-box {
-                border-top: 1px dashed #000;
-                margin-top: auto; /* Прижимаем к низу карточки */
-                padding-top: 8px;
+                border-top: 2px dashed #888;
+                margin-top: auto;
+                padding-top: 10px;
                 display: flex;
-                justify-content: space-between;
-                font-size: 14px;
+                flex-direction: column;
+                gap: 10px;
+                font-size: 15px;
+                font-weight: bold;
             }
 
-            /* Если это режим отчета руководителя - скрываем карточки, показываем таблицу */
+            /* === РЕЖИМ ОТЧЕТА РУКОВОДИТЕЛЯ === */
             .manager-report-mode .print-page { display: none !important; }
-            .manager-report-mode #managerTable { display: table !important; width: 100%; border-collapse: collapse; margin-top: 20px;}
+            .manager-report-mode #managerTable { display: table !important; width: 100%; border-collapse: collapse; margin: 15mm auto;}
             .manager-report-mode #managerTable th, .manager-report-mode #managerTable td { border: 1px solid #000; padding: 10px; text-align: right; }
-            .manager-report-mode #managerTable th { background-color: #e5e7eb; font-weight: bold;}
-            .manager-report-mode #printTitleManager { display: block !important; font-size: 24px; font-weight: bold; text-align: center; text-decoration: underline; margin-bottom: 20px; }
+            .manager-report-mode #managerTable th { background-color: #e5e7eb; font-weight: bold; font-size: 16px;}
+            .manager-report-mode #printTitleManager { display: block !important; font-size: 26px; font-weight: bold; text-align: center; text-decoration: underline; margin-top: 15mm; }
         }
     </style>
 </head>
@@ -137,7 +170,7 @@
             </div>
         </div>
 
-        <div class="hidden print-only" id="printTitleManager"></div>
+        <div class="hidden" id="printTitleManager"></div>
 
         <div class="flex bg-white rounded-2xl shadow-sm mb-6 overflow-hidden no-print flex-wrap md:flex-nowrap">
             <button onclick="switchTab('חשמל')" id="tab-חשמל" class="tab-btn active flex-1 py-4 px-2 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-bolt text-yellow-500 ml-2"></i>חשמל</button>
@@ -146,7 +179,7 @@
             <button onclick="switchTab('ליקויים')" id="tab-ליקויים" class="tab-btn flex-1 py-4 px-2 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-clipboard-list text-blue-500 ml-2"></i>ליקויים (כללי)</button>
         </div>
 
-        <table id="managerTable" class="hidden print-only">
+        <table id="managerTable" class="hidden">
             <thead>
                 <tr>
                     <th>תאריך פתיחה</th>
@@ -162,7 +195,7 @@
 
         <div id="screenTasksContainer" class="space-y-4 no-print"></div>
 
-        <div id="printTasksContainer" class="hidden print-only"></div>
+        <div id="printTasksContainer"></div>
 
     </div>
 
@@ -254,8 +287,8 @@
                 return;
             }
 
-            // Группировка для Печати (по Отделению и Дате)
             let groupsForPrint = {};
+            
             filtered.forEach((task, index) => {
                 const actionColor = task.actionType == 1 ? "text-red-600 bg-red-100" : "text-orange-600 bg-orange-100";
                 const actionText = task.actionType == 1 ? "החלפה" : "תיקון";
@@ -288,7 +321,7 @@
                     </div>
                 </div>`;
 
-                // 2. ОТРИСОВКА ДЛЯ ТАБЛИЦЫ РУКОВОДИТЕЛЯ
+                // 2. ТАБЛИЦА РУКОВОДИТЕЛЯ
                 tbody.innerHTML += `
                 <tr>
                     <td>${displayDate}</td>
@@ -299,13 +332,13 @@
                     <td class="w-40"></td>
                 </tr>`;
 
-                // 3. СБОР ДАННЫХ ДЛЯ ПЕЧАТИ ЛИСТОВ A4
+                // 3. СБОР ДЛЯ ПЕЧАТИ (ПО ОТДЕЛЕНИЮ И ДАТЕ)
                 let groupKey = `${task.dept}|${displayDate}`;
                 if(!groupsForPrint[groupKey]) groupsForPrint[groupKey] = [];
                 groupsForPrint[groupKey].push({...task, actionText, cleanPic});
             });
 
-            // 4. ГЕНЕРАЦИЯ ЛИСТОВ А4 (по 4 штуки на лист в рамке)
+            // 4. ГЕНЕРАЦИЯ ЛИСТОВ А4 (Строго 4 квадрата на лист)
             for(let key in groupsForPrint) {
                 let groupTasks = groupsForPrint[key];
                 let dept = groupTasks[0].dept;
@@ -313,8 +346,9 @@
 
                 for(let i=0; i < groupTasks.length; i+=4) {
                     let chunk = groupTasks.slice(i, i+4);
+                    
                     let pageHtml = `
-                    <div class="print-page">
+                    <div class="print-page hidden print-only">
                         <div class="print-page-header">צוות: ${currentTab} | מחלקה: ${dept} | תאריך בדיקה: ${date}</div>
                         <div class="print-cards-grid">
                     `;
@@ -323,24 +357,28 @@
                         const photoHtml = task.cleanPic ? `<img src="${task.cleanPic}" class="print-photo">` : `<div class="print-photo-placeholder">אין תמונה</div>`;
                         pageHtml += `
                         <div class="print-card">
-                            ${photoHtml}
-                            <div class="print-card-content">
-                                <div class="flex justify-between border-b pb-2 mb-2">
-                                    <span class="font-bold text-xl">חדר: ${task.room}</span>
-                                    <span class="font-bold text-lg px-2 border rounded bg-gray-100">${task.actionText}</span>
+                            <div class="print-card-top">
+                                <span class="font-black text-2xl">חדר: ${task.room}</span>
+                                <span class="font-bold text-xl px-4 py-1 border-2 border-gray-400 rounded-lg bg-gray-100">${task.actionText}</span>
+                            </div>
+                            <div class="print-card-body">
+                                ${photoHtml}
+                                <div class="print-info">
+                                    <p class="font-black text-2xl mb-2 leading-tight">${task.defect}</p>
+                                    ${task.comment ? `<p class="text-lg text-gray-700 leading-tight">${task.comment}</p>` : ''}
                                 </div>
-                                <p class="font-bold text-lg">${task.defect}</p>
-                                ${task.comment ? `<p class="text-sm mt-1 text-gray-600">${task.comment}</p>` : ''}
-                                
-                                <div class="signature-box mt-auto">
+                            </div>
+                            <div class="signature-box">
+                                <div class="flex justify-between mb-3">
                                     <span>שם המבצע: ____________</span>
-                                    <span>חתימה: ____________</span>
+                                    <span>תאריך: ____________</span>
                                 </div>
+                                <div>חתימה: __________________________</div>
                             </div>
                         </div>`;
                     });
                     
-                    pageHtml += `</div></div>`; // Закрываем grid и page
+                    pageHtml += `</div></div>`;
                     printContainer.innerHTML += pageHtml;
                 }
             }
