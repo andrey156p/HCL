@@ -12,7 +12,7 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* === ЖЕЛЕЗОБЕТОННАЯ ПЕЧАТЬ А4 === */
+        /* === ИДЕАЛЬНАЯ ЖЕЛЕЗОБЕТОННАЯ ПЕЧАТЬ А4 (СЕТКА 2x2) === */
         @media print {
             @page { size: A4 portrait; margin: 5mm; }
             body { background: white; margin: 0; padding: 0 !important; -webkit-print-color-adjust: exact; }
@@ -27,7 +27,7 @@
 
             .print-page {
                 width: 100%;
-                height: 280mm; /* Высота А4 минус поля */
+                height: 282mm; /* Высота А4 минус поля */
                 page-break-after: always; /* Каждый блок = новый лист */
                 box-sizing: border-box;
                 padding: 5mm;
@@ -35,54 +35,59 @@
                 flex-direction: column;
             }
             .print-page-header {
-                font-size: 20px;
+                font-size: 19px;
                 font-weight: bold;
                 text-align: center;
                 border-bottom: 3px solid #000;
-                padding-bottom: 8px;
-                margin-bottom: 12px;
-                height: 35px;
+                padding-bottom: 5px;
+                margin-bottom: 10px;
+                height: 30px;
+                overflow: hidden;
             }
             .print-cards-grid {
                 display: flex;
                 flex-wrap: wrap;
                 justify-content: space-between;
                 align-content: space-between;
-                height: calc(100% - 50px); /* Заполняем всё место под заголовком */
+                height: calc(100% - 40px); /* Заполняем всё место под заголовком */
             }
             /* Строгий квадрат 2х2 */
             .print-card {
-                width: 48.5%;
-                height: 48.5%;
+                width: 48.8%;
+                height: 48.8%;
                 border: 2px solid #000;
                 border-radius: 10px;
-                padding: 12px;
+                padding: 10px;
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;
                 page-break-inside: avoid; /* Запрет разрыва внутри карточки */
+                overflow: hidden;
             }
             .print-card-top {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                border-bottom: 2px solid #aaa;
-                padding-bottom: 8px;
-                margin-bottom: 10px;
+                border-bottom: 2px solid #ccc;
+                padding-bottom: 5px;
+                margin-bottom: 8px;
             }
             .print-card-body {
                 display: flex;
-                gap: 15px;
+                gap: 10px;
                 flex-grow: 1;
                 overflow: hidden;
+                align-items: flex-start; /* Фото прижато к верху */
             }
+            
+            /* === МИНИ ФОТО (Исправление) === */
             .print-photo, .print-photo-placeholder {
-                width: 110px;
-                height: 110px;
+                width: 80px;  /* Уменьшили размер */
+                height: 80px; /* Уменьшили размер */
                 flex-shrink: 0;
                 object-fit: cover;
-                border: 2px solid #555;
-                border-radius: 8px;
+                border: 1px solid #555;
+                border-radius: 6px;
             }
             .print-photo-placeholder {
                 background: #eee;
@@ -91,29 +96,33 @@
                 justify-content: center;
                 color: #888;
                 font-weight: bold;
-                font-size: 14px;
+                font-size: 12px;
+                text-align: center;
             }
             .print-info {
                 flex-grow: 1;
                 display: flex;
                 flex-direction: column;
+                overflow: hidden;
             }
+            
+            /* Подвал карточки */
             .signature-box {
                 border-top: 2px dashed #000;
-                margin-top: 10px;
-                padding-top: 8px;
+                margin-top: auto;
+                padding-top: 5px;
                 display: flex;
                 justify-content: space-between;
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: bold;
             }
 
             /* --- РЕЖИМ 2: ПЕЧАТЬ ТАБЛИЦЫ РУКОВОДИТЕЛЯ --- */
             body.manager-report-mode #printTasksContainer { display: none !important; }
             body.manager-report-mode #managerTable { display: table !important; width: 100%; border-collapse: collapse; margin-top: 10mm;}
-            body.manager-report-mode #managerTable th, body.manager-report-mode #managerTable td { border: 1px solid #000; padding: 10px; text-align: right; }
-            body.manager-report-mode #managerTable th { background-color: #e5e7eb; font-weight: bold; font-size: 16px;}
-            body.manager-report-mode #printTitleManager { display: block !important; font-size: 26px; font-weight: bold; text-align: center; text-decoration: underline; margin-top: 10mm; margin-bottom: 10mm;}
+            body.manager-report-mode #managerTable th, body.manager-report-mode #managerTable td { border: 1px solid #000; padding: 8px; text-align: right; }
+            body.manager-report-mode #managerTable th { background-color: #e5e7eb; font-weight: bold; font-size: 15px;}
+            body.manager-report-mode #printTitleManager { display: block !important; font-size: 24px; font-weight: bold; text-align: center; text-decoration: underline; margin-top: 10mm; margin-bottom: 10mm;}
         }
     </style>
 </head>
@@ -340,7 +349,7 @@
                     let chunk = groupTasks.slice(i, i+4);
                     
                     let pageHtml = `
-                    <div class="print-page">
+                    <div class="print-page hidden">
                         <div class="print-page-header">צוות: ${currentTab} | מחלקה: ${dept} | תאריך בדיקה: ${date}</div>
                         <div class="print-cards-grid">
                     `;
@@ -356,8 +365,8 @@
                             <div class="print-card-body">
                                 ${photoHtml}
                                 <div class="print-info">
-                                    <p class="font-black text-xl mb-1 leading-tight">${task.defect}</p>
-                                    ${task.comment ? `<p class="text-sm text-gray-700 leading-tight">${task.comment}</p>` : ''}
+                                    <p class="font-black text-lg mb-1 leading-tight">${task.defect}</p>
+                                    ${task.comment ? `<p class="text-xs text-gray-700 leading-tight">${task.comment}</p>` : ''}
                                 </div>
                             </div>
                             <div class="signature-box">
