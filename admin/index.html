@@ -12,20 +12,84 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
+        /* === МАГИЯ ПЕЧАТИ (СТРОГИЙ A4) === */
         @media print {
-            body { background: white; padding: 0 !important; }
+            body { background: white; margin: 0; padding: 0 !important; }
             .no-print { display: none !important; }
             .print-only { display: block !important; }
-            .task-card { break-inside: avoid; border: 1px solid #000; box-shadow: none; margin-bottom: 15px; page-break-inside: avoid; }
-            .print-header { font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; text-decoration: underline; }
-            .print-photo { width: 100px; height: 100px; object-fit: cover; border: 1px solid #ccc; border-radius: 8px;}
-            .signature-box { border-top: 1px dashed #000; margin-top: 15px; padding-top: 10px; display: flex; justify-content: space-between; font-size: 14px;}
-        }
+            
+            /* Настройки печатной страницы */
+            .print-page {
+                page-break-after: always;
+                border: 3px solid #000; /* Рамка на весь лист */
+                padding: 20px;
+                margin: 0;
+                height: 285mm; /* Высота почти А4 */
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+            }
+            .print-page-header {
+                font-size: 20px;
+                font-weight: bold;
+                text-align: center;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+            }
+            .print-cards-grid {
+                display: grid;
+                grid-template-rows: repeat(4, 1fr); /* Ровно 4 блока на лист */
+                gap: 15px;
+                flex-grow: 1;
+            }
+            .print-card {
+                border: 2px dashed #888; /* Рамка вокруг каждой задачи */
+                padding: 15px;
+                display: flex;
+                gap: 20px;
+                border-radius: 8px;
+            }
+            .print-photo {
+                width: 120px;
+                height: 120px;
+                object-fit: cover;
+                border: 1px solid #000;
+                border-radius: 8px;
+            }
+            .print-photo-placeholder {
+                width: 120px;
+                height: 120px;
+                background: #f3f4f6;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #aaa;
+                font-weight: bold;
+            }
+            .print-card-content {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+            }
+            .signature-box {
+                border-top: 1px dashed #000;
+                margin-top: auto; /* Прижимаем к низу карточки */
+                padding-top: 8px;
+                display: flex;
+                justify-content: space-between;
+                font-size: 14px;
+            }
 
-        .manager-report-mode .task-card { display: none !important; }
-        .manager-report-mode #managerTable { display: table !important; width: 100%; border-collapse: collapse; margin-top: 20px;}
-        .manager-report-mode #managerTable th, .manager-report-mode #managerTable td { border: 1px solid #000; padding: 10px; text-align: right; }
-        .manager-report-mode #managerTable th { background-color: #e5e7eb; font-weight: bold;}
+            /* Если это режим отчета руководителя - скрываем карточки, показываем таблицу */
+            .manager-report-mode .print-page { display: none !important; }
+            .manager-report-mode #managerTable { display: table !important; width: 100%; border-collapse: collapse; margin-top: 20px;}
+            .manager-report-mode #managerTable th, .manager-report-mode #managerTable td { border: 1px solid #000; padding: 10px; text-align: right; }
+            .manager-report-mode #managerTable th { background-color: #e5e7eb; font-weight: bold;}
+            .manager-report-mode #printTitleManager { display: block !important; font-size: 24px; font-weight: bold; text-align: center; text-decoration: underline; margin-bottom: 20px; }
+        }
     </style>
 </head>
 <body class="text-gray-800">
@@ -50,8 +114,8 @@
             <div class="flex flex-col md:flex-row justify-between items-center mb-6 border-b pb-4">
                 <h1 class="text-3xl font-black text-gray-800 mb-4 md:mb-0">לוח בקרה <span class="text-indigo-600">HCL</span></h1>
                 <div class="flex gap-2 flex-wrap justify-center">
-                    <button onclick="printTasks()" class="bg-gray-800 text-white px-5 py-2 rounded-xl font-bold hover:bg-gray-700"><i class="fas fa-print ml-2"></i>הדפסת משימות</button>
-                    <button onclick="printManagerReport()" class="bg-green-600 text-white px-5 py-2 rounded-xl font-bold hover:bg-green-500"><i class="fas fa-file-alt ml-2"></i>דוח מנהל</button>
+                    <button onclick="printTasks()" class="bg-gray-800 text-white px-5 py-2 rounded-xl font-bold hover:bg-gray-700"><i class="fas fa-print ml-2"></i>הדפסת משימות לצוות</button>
+                    <button onclick="printManagerReport()" class="bg-green-600 text-white px-5 py-2 rounded-xl font-bold hover:bg-green-500"><i class="fas fa-file-alt ml-2"></i>דוח מנהל (טבלה)</button>
                     <button onclick="loadTasks()" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl font-bold hover:bg-indigo-200"><i class="fas fa-sync-alt"></i></button>
                 </div>
             </div>
@@ -73,12 +137,13 @@
             </div>
         </div>
 
-        <div class="hidden print-only print-header" id="printTitle">רשימת משימות לתחזוקה - HCL</div>
+        <div class="hidden print-only" id="printTitleManager"></div>
 
-        <div class="flex bg-white rounded-2xl shadow-sm mb-6 overflow-hidden no-print">
-            <button onclick="switchTab('חשמל')" id="tab-חשמל" class="tab-btn active flex-1 py-4 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-bolt text-yellow-500 ml-2"></i>חשמל</button>
-            <button onclick="switchTab('בינוי_ודלתות')" id="tab-בינוי_ודלתות" class="tab-btn flex-1 py-4 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-hammer text-orange-500 ml-2"></i>בינוי ודלתות</button>
-            <button onclick="switchTab('ליקויים')" id="tab-ליקויים" class="tab-btn flex-1 py-4 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-clipboard-list text-blue-500 ml-2"></i>כללי (ליקויים)</button>
+        <div class="flex bg-white rounded-2xl shadow-sm mb-6 overflow-hidden no-print flex-wrap md:flex-nowrap">
+            <button onclick="switchTab('חשמל')" id="tab-חשמל" class="tab-btn active flex-1 py-4 px-2 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-bolt text-yellow-500 ml-2"></i>חשמל</button>
+            <button onclick="switchTab('בינוי_ודלתות')" id="tab-בינוי_ודלתות" class="tab-btn flex-1 py-4 px-2 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-hammer text-orange-500 ml-2"></i>בינוי ודלתות</button>
+            <button onclick="switchTab('מיטות')" id="tab-מיטות" class="tab-btn flex-1 py-4 px-2 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-bed text-purple-500 ml-2"></i>מיטות</button>
+            <button onclick="switchTab('ליקויים')" id="tab-ליקויים" class="tab-btn flex-1 py-4 px-2 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-clipboard-list text-blue-500 ml-2"></i>ליקויים (כללי)</button>
         </div>
 
         <table id="managerTable" class="hidden print-only">
@@ -95,7 +160,9 @@
             <tbody id="managerTableBody"></tbody>
         </table>
 
-        <div id="tasksContainer" class="space-y-4"></div>
+        <div id="screenTasksContainer" class="space-y-4 no-print"></div>
+
+        <div id="printTasksContainer" class="hidden print-only"></div>
 
     </div>
 
@@ -121,13 +188,9 @@
             return url;
         }
 
-        // ВАЖНО: ФУНКЦИЯ ДЛЯ ЗАЩИТЫ ОТ КАВЫЧЕК
         function escapeString(str) {
             if (!str) return "";
-            return String(str)
-                .replace(/\\/g, "\\\\")   // Экранируем слеши
-                .replace(/"/g, "&quot;")  // Экранируем двойные кавычки (для HTML)
-                .replace(/'/g, "\\'");    // Экранируем одинарные кавычки (для JS)
+            return String(str).replace(/\\/g, "\\\\").replace(/"/g, "&quot;").replace(/'/g, "\\'");
         }
 
         async function loadTasks() {
@@ -161,17 +224,19 @@
         }
 
         function renderTasks() {
-            const container = document.getElementById('tasksContainer');
+            const screenContainer = document.getElementById('screenTasksContainer');
+            const printContainer = document.getElementById('printTasksContainer');
             const tbody = document.getElementById('managerTableBody');
-            container.innerHTML = ''; tbody.innerHTML = '';
+            
+            screenContainer.innerHTML = '';
+            printContainer.innerHTML = '';
+            tbody.innerHTML = '';
             
             const filterDept = document.getElementById('filterDept').value;
             const filterDate = document.getElementById('filterDate').value;
 
             let filtered = allTasks.filter(t => t.sheet === currentTab);
-
             if(filterDept !== "ALL") { filtered = filtered.filter(t => t.dept === filterDept); }
-            
             if(filterDate) {
                 const selectedDate = new Date(filterDate);
                 filtered = filtered.filter(t => {
@@ -185,31 +250,28 @@
             }
             
             if(filtered.length === 0) {
-                container.innerHTML = '<div class="text-center p-10 text-gray-400 font-bold bg-white rounded-2xl"><i class="fas fa-check-circle text-5xl mb-4"></i><p>אין משימות פתוחות לסינון זה!</p></div>';
+                screenContainer.innerHTML = '<div class="text-center p-10 text-gray-400 font-bold bg-white rounded-2xl"><i class="fas fa-check-circle text-5xl mb-4"></i><p>אין משימות פתוחות לסינון זה!</p></div>';
                 return;
             }
 
+            // Группировка для Печати (по Отделению и Дате)
+            let groupsForPrint = {};
             filtered.forEach((task, index) => {
                 const actionColor = task.actionType == 1 ? "text-red-600 bg-red-100" : "text-orange-600 bg-orange-100";
                 const actionText = task.actionType == 1 ? "החלפה" : "תיקון";
                 const cleanPic = fixImageUrl(task.photo);
                 const displayDate = task.dateStr.split(" ")[0]; 
                 
-                // Применяем нашу защитную функцию к данным перед вставкой в кнопку
                 const safeSheet = escapeString(task.sheet);
                 const safeDateStr = escapeString(task.dateStr);
                 const safeRoom = escapeString(task.room);
                 const safeDefect = escapeString(task.defect);
 
-                const photoHtml = cleanPic ? 
-                    `<a href="${cleanPic}" target="_blank" class="no-print"><img src="${cleanPic}" class="w-24 h-24 object-cover rounded-xl border"></a>
-                     <img src="${cleanPic}" class="hidden print-only print-photo">` : 
-                    `<div class="w-24 h-24 bg-gray-100 rounded-xl border flex items-center justify-center text-gray-400"><i class="fas fa-image text-2xl"></i></div>`;
-
-                const html = `
+                // 1. ОТРИСОВКА НА ЭКРАНЕ
+                const screenPhotoHtml = cleanPic ? `<a href="${cleanPic}" target="_blank"><img src="${cleanPic}" class="w-24 h-24 object-cover rounded-xl border"></a>` : `<div class="w-24 h-24 bg-gray-100 rounded-xl border flex items-center justify-center text-gray-400"><i class="fas fa-image text-2xl"></i></div>`;
+                screenContainer.innerHTML += `
                 <div class="task-card bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-5">
-                    <div class="flex-shrink-0 flex justify-center">${photoHtml}</div>
-                    
+                    <div class="flex-shrink-0 flex justify-center">${screenPhotoHtml}</div>
                     <div class="flex-grow">
                         <div class="flex justify-between items-start mb-2 border-b pb-2">
                             <h3 class="text-xl font-black text-gray-800">${task.dept} <span class="text-gray-400 mx-2">|</span> חדר: <span class="text-indigo-600">${task.room}</span></h3>
@@ -218,22 +280,15 @@
                         <p class="font-bold text-lg mb-1"><i class="fas fa-wrench text-gray-400 ml-2"></i>${task.defect}</p>
                         ${task.comment ? `<p class="text-gray-600 mb-2"><i class="fas fa-comment-alt text-gray-400 ml-2"></i>${task.comment}</p>` : ''}
                         <p class="text-xs text-gray-400 mt-2"><i class="fas fa-calendar-alt ml-1"></i> נפתח: ${displayDate}</p>
-                        
-                        <div class="hidden print-only signature-box">
-                            <div>שם המבצע: ____________</div>
-                            <div>חתימה: ____________</div>
-                            <div>תאריך: ____________</div>
-                        </div>
                     </div>
-                    
-                    <div class="flex items-center justify-center min-w-[140px] no-print">
+                    <div class="flex items-center justify-center min-w-[140px]">
                         <button id="btn-${index}" onclick="closeTask('${safeSheet}', '${safeDateStr}', '${safeRoom}', '${safeDefect}', ${index})" class="w-full bg-green-50 text-green-600 border-2 border-green-500 py-3 rounded-xl font-bold hover:bg-green-500 hover:text-white transition-colors flex justify-center items-center gap-2">
                             <i class="fas fa-check"></i> סיום טיפול
                         </button>
                     </div>
                 </div>`;
-                container.innerHTML += html;
 
+                // 2. ОТРИСОВКА ДЛЯ ТАБЛИЦЫ РУКОВОДИТЕЛЯ
                 tbody.innerHTML += `
                 <tr>
                     <td>${displayDate}</td>
@@ -243,7 +298,52 @@
                     <td class="${task.actionType == 1 ? 'text-red-600' : 'text-orange-600'} font-bold">${actionText}</td>
                     <td class="w-40"></td>
                 </tr>`;
+
+                // 3. СБОР ДАННЫХ ДЛЯ ПЕЧАТИ ЛИСТОВ A4
+                let groupKey = `${task.dept}|${displayDate}`;
+                if(!groupsForPrint[groupKey]) groupsForPrint[groupKey] = [];
+                groupsForPrint[groupKey].push({...task, actionText, cleanPic});
             });
+
+            // 4. ГЕНЕРАЦИЯ ЛИСТОВ А4 (по 4 штуки на лист в рамке)
+            for(let key in groupsForPrint) {
+                let groupTasks = groupsForPrint[key];
+                let dept = groupTasks[0].dept;
+                let date = groupTasks[0].dateStr.split(" ")[0];
+
+                for(let i=0; i < groupTasks.length; i+=4) {
+                    let chunk = groupTasks.slice(i, i+4);
+                    let pageHtml = `
+                    <div class="print-page">
+                        <div class="print-page-header">צוות: ${currentTab} | מחלקה: ${dept} | תאריך בדיקה: ${date}</div>
+                        <div class="print-cards-grid">
+                    `;
+                    
+                    chunk.forEach(task => {
+                        const photoHtml = task.cleanPic ? `<img src="${task.cleanPic}" class="print-photo">` : `<div class="print-photo-placeholder">אין תמונה</div>`;
+                        pageHtml += `
+                        <div class="print-card">
+                            ${photoHtml}
+                            <div class="print-card-content">
+                                <div class="flex justify-between border-b pb-2 mb-2">
+                                    <span class="font-bold text-xl">חדר: ${task.room}</span>
+                                    <span class="font-bold text-lg px-2 border rounded bg-gray-100">${task.actionText}</span>
+                                </div>
+                                <p class="font-bold text-lg">${task.defect}</p>
+                                ${task.comment ? `<p class="text-sm mt-1 text-gray-600">${task.comment}</p>` : ''}
+                                
+                                <div class="signature-box mt-auto">
+                                    <span>שם המבצע: ____________</span>
+                                    <span>חתימה: ____________</span>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                    
+                    pageHtml += `</div></div>`; // Закрываем grid и page
+                    printContainer.innerHTML += pageHtml;
+                }
+            }
         }
 
         async function closeTask(sheet, dateStr, room, defect, index) {
@@ -278,13 +378,12 @@
 
         function printTasks() {
             document.body.classList.remove('manager-report-mode');
-            document.getElementById('printTitle').innerText = `רשימת עבודה - צוות ${currentTab}`;
             window.print();
         }
 
         function printManagerReport() {
             document.body.classList.add('manager-report-mode');
-            document.getElementById('printTitle').innerText = `דוח מנהל (תקלות פתוחות) - ${currentTab}`;
+            document.getElementById('printTitleManager').innerText = `דוח מנהל (תקלות פתוחות) - צוות ${currentTab}`;
             window.print();
             setTimeout(() => document.body.classList.remove('manager-report-mode'), 1000); 
         }
