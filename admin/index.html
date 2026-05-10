@@ -27,8 +27,11 @@
             body { background: white; margin: 0; padding: 0 !important; -webkit-print-color-adjust: exact; }
             .no-print { display: none !important; }
             
-            body.task-print-mode .manager-stuff { display: none !important; }
-            body.task-print-mode .task-stuff { display: block !important; }
+            /* ЖЕЛЕЗОБЕТОННОЕ СКРЫТИЕ ВСЕХ ЭЛЕМЕНТОВ ПЕЧАТИ ПО УМОЛЧАНИЮ */
+            #managerTable, #printTitleManager, #printTasksContainer { display: none !important; }
+
+            /* --- РЕЖИМ 1: ПЕЧАТЬ ЗАДАНИЙ (4 КВАДРАТА 2x2) --- */
+            body.task-print-mode #printTasksContainer { display: block !important; }
 
             .print-page {
                 width: 100%;
@@ -104,13 +107,11 @@
             .defect-comment { font-size: 15px; color: #374151; }
             .signature-box { border-top: 2px dashed #000; margin-top: auto; padding-top: 5px; display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; }
 
-            /* РЕЖИМ МЕНЕДЖЕРА */
-            body.manager-report-mode .task-stuff { display: none !important; }
-            body.manager-report-mode .manager-stuff { display: block !important; }
-            body.manager-report-mode table { display: table !important; width: 100%; border-collapse: collapse; margin-top: 10mm; }
+            /* --- РЕЖИМ 2: МЕНЕДЖЕР (ТАБЛИЦА) --- */
+            body.manager-report-mode #managerTable { display: table !important; width: 100%; border-collapse: collapse; margin-top: 10mm; }
+            body.manager-report-mode #printTitleManager { display: block !important; font-size: 24px; font-weight: bold; text-align: center; text-decoration: underline; margin-top: 10mm; margin-bottom: 10mm; }
             body.manager-report-mode th, body.manager-report-mode td { border: 1px solid #000; padding: 8px; text-align: right; }
-            body.manager-report-mode th { background: #f3f4f6; }
-            #printTitleManager { font-size: 24px; font-weight: bold; text-align: center; text-decoration: underline; margin-top: 10mm; margin-bottom: 10mm; }
+            body.manager-report-mode th { background: #f3f4f6; font-size: 15px; }
         }
     </style>
 </head>
@@ -166,8 +167,8 @@
             <button onclick="switchTab('ליקויים')" id="tab-ליקויים" class="tab-btn flex-1 py-4 px-2 font-bold text-gray-500">כללי</button>
         </div>
 
-        <div class="print-only manager-stuff" id="printTitleManager"></div>
-        <table id="managerTable" class="print-only manager-stuff">
+        <div class="print-only" id="printTitleManager"></div>
+        <table id="managerTable" class="print-only">
             <thead>
                 <tr>
                     <th>תאריך</th><th>מחלקה</th><th>חדר</th><th>ליקוי</th><th>פעולה</th><th>אישור ביצוע</th>
@@ -177,7 +178,7 @@
         </table>
 
         <div id="screenTasksContainer" class="space-y-4 no-print"></div>
-        <div id="printTasksContainer" class="print-only task-stuff"></div>
+        <div id="printTasksContainer" class="print-only"></div>
     </div>
 
     <script>
@@ -193,7 +194,6 @@
             } else { document.getElementById('pinError').classList.remove('hidden'); }
         }
 
-        // КАРТИНКИ: ИСПОЛЬЗУЕМ ПРЯМОЙ CDN GOOGLE (САМЫЙ НАДЕЖНЫЙ)
         function fixImageUrl(url) {
             if(!url) return "";
             let id = "";
