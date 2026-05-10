@@ -236,7 +236,7 @@
             } else { document.getElementById('pinError').classList.remove('hidden'); }
         }
 
-        // КОНВЕРТАЦИЯ ССЫЛОК GOOGLE DRIVE (Прямая ссылка)
+        // === ИДЕАЛЬНОЕ И РАБОЧЕЕ РЕШЕНИЕ ДЛЯ КАРТИНОК GOOGLE DRIVE ===
         function fixImageUrl(url) {
             if(!url) return "";
             let fileId = "";
@@ -246,12 +246,12 @@
                 fileId = url.split('/d/')[1].split('/')[0];
             }
             if (fileId) {
-                return `https://drive.google.com/uc?id=${fileId}`;
+                // Прямой экспорт файла. Заставляет Google отдавать сырую картинку немедленно!
+                return `https://drive.google.com/uc?export=download&id=${fileId}`;
             }
             return url;
         }
 
-        // ЗАЩИТА ОТ КАВЫЧЕК
         function escapeString(str) {
             if (!str) return "";
             return String(str).replace(/\\/g, "\\\\").replace(/"/g, "&quot;").replace(/'/g, "\\'");
@@ -443,7 +443,7 @@
             }
         }
 
-        // === ИДЕАЛЬНАЯ ПЕЧАТЬ БЕЗ ПУСТЫХ ЛИСТОВ (Используем микро-таймер) ===
+        // БЕЗОПАСНЫЙ ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМОВ ПЕЧАТИ
         function printTasks() {
             document.body.classList.remove('manager-report-mode');
             document.body.classList.add('task-print-mode');
@@ -457,7 +457,6 @@
             setTimeout(() => { window.print(); }, 100);
         }
 
-        // Возвращаем экран в обычный режим после закрытия окна печати
         window.addEventListener('afterprint', () => {
             document.body.classList.remove('task-print-mode');
             document.body.classList.remove('manager-report-mode');
