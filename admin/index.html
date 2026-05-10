@@ -12,23 +12,27 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* === ИДЕАЛЬНАЯ ЖЕЛЕЗОБЕТОННАЯ ПЕЧАТЬ А4 (СЕТКА 2x2) === */
+        /* === ЭКРАННЫЙ РЕЖИМ (Прячем всё печатное) === */
+        @media screen {
+            .print-only { display: none !important; }
+        }
+
+        /* === ИДЕАЛЬНАЯ ПЕЧАТЬ А4 === */
         @media print {
             @page { size: A4 portrait; margin: 5mm; }
             body { background: white; margin: 0; padding: 0 !important; -webkit-print-color-adjust: exact; }
             
-            /* Универсальный класс для скрытия экранного мусора */
+            /* Прячем экранный мусор (кнопки, фильтры и тд) */
             .no-print { display: none !important; }
             
             /* --- РЕЖИМ 1: ПЕЧАТЬ ЗАДАНИЙ (4 КВАДРАТА) --- */
-            body.task-print-mode #managerTable { display: none !important; }
-            body.task-print-mode #printTitleManager { display: none !important; }
-            body.task-print-mode #printTasksContainer { display: block !important; }
+            body.task-print-mode .manager-stuff { display: none !important; }
+            body.task-print-mode .task-stuff { display: block !important; }
 
             .print-page {
                 width: 100%;
                 height: 282mm; /* Высота А4 минус поля */
-                page-break-after: always; /* Каждый блок = новый лист */
+                page-break-after: always;
                 box-sizing: border-box;
                 padding: 5mm;
                 display: flex;
@@ -49,9 +53,8 @@
                 flex-wrap: wrap;
                 justify-content: space-between;
                 align-content: space-between;
-                height: calc(100% - 40px); /* Заполняем всё место под заголовком */
+                height: calc(100% - 40px); 
             }
-            /* Строгий квадрат 2х2 */
             .print-card {
                 width: 48.8%;
                 height: 48.8%;
@@ -61,7 +64,7 @@
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;
-                page-break-inside: avoid; /* Запрет разрыва внутри карточки */
+                page-break-inside: avoid;
                 overflow: hidden;
             }
             .print-card-top {
@@ -77,13 +80,11 @@
                 gap: 10px;
                 flex-grow: 1;
                 overflow: hidden;
-                align-items: flex-start; /* Фото прижато к верху */
+                align-items: flex-start;
             }
-            
-            /* === МИНИ ФОТО (Исправление) === */
             .print-photo, .print-photo-placeholder {
-                width: 80px;  /* Уменьшили размер */
-                height: 80px; /* Уменьшили размер */
+                width: 80px;  /* МИНИ ФОТО */
+                height: 80px; /* МИНИ ФОТО */
                 flex-shrink: 0;
                 object-fit: cover;
                 border: 1px solid #555;
@@ -105,8 +106,6 @@
                 flex-direction: column;
                 overflow: hidden;
             }
-            
-            /* Подвал карточки */
             .signature-box {
                 border-top: 2px dashed #000;
                 margin-top: auto;
@@ -118,11 +117,13 @@
             }
 
             /* --- РЕЖИМ 2: ПЕЧАТЬ ТАБЛИЦЫ РУКОВОДИТЕЛЯ --- */
-            body.manager-report-mode #printTasksContainer { display: none !important; }
-            body.manager-report-mode #managerTable { display: table !important; width: 100%; border-collapse: collapse; margin-top: 10mm;}
-            body.manager-report-mode #managerTable th, body.manager-report-mode #managerTable td { border: 1px solid #000; padding: 8px; text-align: right; }
-            body.manager-report-mode #managerTable th { background-color: #e5e7eb; font-weight: bold; font-size: 15px;}
-            body.manager-report-mode #printTitleManager { display: block !important; font-size: 24px; font-weight: bold; text-align: center; text-decoration: underline; margin-top: 10mm; margin-bottom: 10mm;}
+            body.manager-report-mode .task-stuff { display: none !important; }
+            body.manager-report-mode div.manager-stuff { display: block !important; }
+            body.manager-report-mode table.manager-stuff { display: table !important; width: 100%; border-collapse: collapse; margin-top: 10mm;}
+            
+            body.manager-report-mode table th, body.manager-report-mode table td { border: 1px solid #000; padding: 8px; text-align: right; }
+            body.manager-report-mode table th { background-color: #e5e7eb; font-weight: bold; font-size: 15px;}
+            #printTitleManager { font-size: 24px; font-weight: bold; text-align: center; text-decoration: underline; margin-top: 10mm; margin-bottom: 10mm;}
         }
     </style>
 </head>
@@ -171,8 +172,6 @@
             </div>
         </div>
 
-        <div class="hidden" id="printTitleManager"></div>
-
         <div class="flex bg-white rounded-2xl shadow-sm mb-6 overflow-hidden no-print flex-wrap md:flex-nowrap">
             <button onclick="switchTab('חשמל')" id="tab-חשמל" class="tab-btn active flex-1 py-4 px-2 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-bolt text-yellow-500 ml-2"></i>חשמל</button>
             <button onclick="switchTab('בינוי_ודלתות')" id="tab-בינוי_ודלתות" class="tab-btn flex-1 py-4 px-2 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-hammer text-orange-500 ml-2"></i>בינוי ודלתות</button>
@@ -180,7 +179,8 @@
             <button onclick="switchTab('ליקויים')" id="tab-ליקויים" class="tab-btn flex-1 py-4 px-2 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-clipboard-list text-blue-500 ml-2"></i>ליקויים (כללי)</button>
         </div>
 
-        <table id="managerTable" class="hidden">
+        <div class="print-only manager-stuff" id="printTitleManager"></div>
+        <table id="managerTable" class="print-only manager-stuff">
             <thead>
                 <tr>
                     <th>תאריך פתיחה</th>
@@ -196,7 +196,7 @@
 
         <div id="screenTasksContainer" class="space-y-4 no-print"></div>
 
-        <div id="printTasksContainer" class="hidden"></div>
+        <div id="printTasksContainer" class="print-only task-stuff"></div>
 
     </div>
 
@@ -301,7 +301,7 @@
                 const safeRoom = escapeString(task.room);
                 const safeDefect = escapeString(task.defect);
 
-                // 1. ОТРИСОВКА НА ЭКРАНЕ
+                // ОТРИСОВКА НА ЭКРАНЕ
                 const screenPhotoHtml = cleanPic ? `<a href="${cleanPic}" target="_blank"><img src="${cleanPic}" class="w-24 h-24 object-cover rounded-xl border"></a>` : `<div class="w-24 h-24 bg-gray-100 rounded-xl border flex items-center justify-center text-gray-400"><i class="fas fa-image text-2xl"></i></div>`;
                 screenContainer.innerHTML += `
                 <div class="task-card bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-5">
@@ -322,7 +322,7 @@
                     </div>
                 </div>`;
 
-                // 2. ТАБЛИЦА РУКОВОДИТЕЛЯ
+                // ТАБЛИЦА РУКОВОДИТЕЛЯ
                 tbody.innerHTML += `
                 <tr>
                     <td>${displayDate}</td>
@@ -333,13 +333,13 @@
                     <td class="w-40"></td>
                 </tr>`;
 
-                // 3. СБОР ДЛЯ ПЕЧАТИ 2x2
+                // СБОР ДЛЯ ПЕЧАТИ 2x2
                 let groupKey = `${task.dept}|${displayDate}`;
                 if(!groupsForPrint[groupKey]) groupsForPrint[groupKey] = [];
                 groupsForPrint[groupKey].push({...task, actionText, cleanPic});
             });
 
-            // 4. ГЕНЕРАЦИЯ ЛИСТОВ А4 (Строго 4 квадрата на лист)
+            // ГЕНЕРАЦИЯ ЛИСТОВ А4 (Строго 4 квадрата)
             for(let key in groupsForPrint) {
                 let groupTasks = groupsForPrint[key];
                 let dept = groupTasks[0].dept;
@@ -349,7 +349,7 @@
                     let chunk = groupTasks.slice(i, i+4);
                     
                     let pageHtml = `
-                    <div class="print-page hidden">
+                    <div class="print-page">
                         <div class="print-page-header">צוות: ${currentTab} | מחלקה: ${dept} | תאריך בדיקה: ${date}</div>
                         <div class="print-cards-grid">
                     `;
@@ -366,7 +366,7 @@
                                 ${photoHtml}
                                 <div class="print-info">
                                     <p class="font-black text-lg mb-1 leading-tight">${task.defect}</p>
-                                    ${task.comment ? `<p class="text-xs text-gray-700 leading-tight">${task.comment}</p>` : ''}
+                                    ${task.comment ? `<p class="text-sm text-gray-700 leading-tight">${task.comment}</p>` : ''}
                                 </div>
                             </div>
                             <div class="signature-box">
@@ -413,34 +413,18 @@
             }
         }
 
-        // ЖЕЛЕЗОБЕТОННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ДЛЯ ПЕЧАТИ
+        // ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ ПЕЧАТИ (БЕЗ ТАЙМЕРОВ!)
         function printTasks() {
             document.body.classList.remove('manager-report-mode');
             document.body.classList.add('task-print-mode');
-            
-            // Временно показываем скрытый контейнер для печати
-            document.getElementById('printTasksContainer').classList.remove('hidden');
             window.print();
-            
-            // Возвращаем всё обратно после закрытия окна печати
-            setTimeout(() => {
-                document.body.classList.remove('task-print-mode');
-                document.getElementById('printTasksContainer').classList.add('hidden');
-            }, 1000);
         }
 
         function printManagerReport() {
             document.body.classList.remove('task-print-mode');
             document.body.classList.add('manager-report-mode');
-            
-            document.getElementById('managerTable').classList.remove('hidden');
             document.getElementById('printTitleManager').innerText = `דוח מנהל (תקלות פתוחות) - צוות ${currentTab}`;
             window.print();
-            
-            setTimeout(() => {
-                document.body.classList.remove('manager-report-mode');
-                document.getElementById('managerTable').classList.add('hidden');
-            }, 1000); 
         }
     </script>
 </body>
