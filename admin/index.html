@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HCL - לוח בקרה</title>
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1f2937">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="HCL Admin">
     <link rel="apple-touch-icon" href="admin-192.png">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HCL - לוח בקרה</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
@@ -25,16 +30,15 @@
             @page { size: A4 portrait; margin: 5mm; }
             body { background: white; margin: 0; padding: 0 !important; -webkit-print-color-adjust: exact; }
             
-            /* Прячем экранный мусор (кнопки, фильтры и тд) */
             .no-print { display: none !important; }
             
-            /* --- РЕЖИМ 1: ПЕЧАТЬ ЗАДАНИЙ (4 КВАДРАТА) --- */
+            /* --- РЕЖИМ 1: ПЕЧАТЬ ЗАДАНИЙ (4 КВАДРАТА 2x2) --- */
             body.task-print-mode .manager-stuff { display: none !important; }
             body.task-print-mode .task-stuff { display: block !important; }
 
             .print-page {
                 width: 100%;
-                height: 282mm; /* Высота А4 минус поля */
+                height: 282mm;
                 page-break-after: always;
                 box-sizing: border-box;
                 padding: 5mm;
@@ -86,8 +90,8 @@
                 align-items: flex-start;
             }
             .print-photo, .print-photo-placeholder {
-                width: 80px;  /* МИНИ ФОТО */
-                height: 80px; /* МИНИ ФОТО */
+                width: 80px; 
+                height: 80px; 
                 flex-shrink: 0;
                 object-fit: cover;
                 border: 1px solid #555;
@@ -204,7 +208,8 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxMN6s8ektwhHxuE_8xDz1ZaeqYyXaLyniwi_xFpbzVEjFEo_AUd6PybJk6nGKxmy7E/exec";
+        // ССЫЛКА НА ВАШ GOOGLE APPS SCRIPT
+        const API_URL = "https://script.google.com/macros/s/AKfycbxMN6s8ektwhHxuE_8xDz1 শারীরিকxMN6s8ektwhHxuE_8xDz1ZaeqYyXaLyniwi_xFpbzVEjFEo_AUd6PybJk6nGKxmy7E/exec";
         let allTasks = [];
         let currentTab = "חשמל";
 
@@ -216,15 +221,22 @@
             } else { document.getElementById('pinError').classList.remove('hidden'); }
         }
 
+        // КОНВЕРТАЦИЯ ССЫЛОК GOOGLE DRIVE (API THUMBNAIL)
         function fixImageUrl(url) {
             if(!url) return "";
-            if(url.includes('/view')) {
-                const match = url.match(/d\/([a-zA-Z0-9-_]+)/);
-                if(match) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+            let fileId = "";
+            if (url.includes('id=')) {
+                fileId = url.split('id=')[1].split('&')[0];
+            } else if (url.includes('/d/')) {
+                fileId = url.split('/d/')[1].split('/')[0];
+            }
+            if (fileId) {
+                return `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
             }
             return url;
         }
 
+        // ЗАЩИТА ОТ КАВЫЧЕК ДЛЯ КНОПОК "СГОР"
         function escapeString(str) {
             if (!str) return "";
             return String(str).replace(/\\/g, "\\\\").replace(/"/g, "&quot;").replace(/'/g, "\\'");
@@ -304,7 +316,7 @@
                 const safeRoom = escapeString(task.room);
                 const safeDefect = escapeString(task.defect);
 
-                // ОТРИСОВКА НА ЭКРАНЕ
+                // 1. ОТРИСОВКА НА ЭКРАНЕ (Список)
                 const screenPhotoHtml = cleanPic ? `<a href="${cleanPic}" target="_blank"><img src="${cleanPic}" class="w-24 h-24 object-cover rounded-xl border"></a>` : `<div class="w-24 h-24 bg-gray-100 rounded-xl border flex items-center justify-center text-gray-400"><i class="fas fa-image text-2xl"></i></div>`;
                 screenContainer.innerHTML += `
                 <div class="task-card bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-5">
@@ -325,7 +337,7 @@
                     </div>
                 </div>`;
 
-                // ТАБЛИЦА РУКОВОДИТЕЛЯ
+                // 2. ОТРИСОВКА В ТАБЛИЦУ РУКОВОДИТЕЛЯ
                 tbody.innerHTML += `
                 <tr>
                     <td>${displayDate}</td>
@@ -336,13 +348,13 @@
                     <td class="w-40"></td>
                 </tr>`;
 
-                // СБОР ДЛЯ ПЕЧАТИ 2x2
+                // 3. СБОР ДАННЫХ ДЛЯ ПЕЧАТИ КАРТОЧЕК (Сгруппировано по отделению и дате)
                 let groupKey = `${task.dept}|${displayDate}`;
                 if(!groupsForPrint[groupKey]) groupsForPrint[groupKey] = [];
                 groupsForPrint[groupKey].push({...task, actionText, cleanPic});
             });
 
-            // ГЕНЕРАЦИЯ ЛИСТОВ А4 (Строго 4 квадрата)
+            // 4. ГЕНЕРАЦИЯ ЛИСТОВ А4 (Сетка 2x2)
             for(let key in groupsForPrint) {
                 let groupTasks = groupsForPrint[key];
                 let dept = groupTasks[0].dept;
@@ -416,19 +428,26 @@
             }
         }
 
-        // ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ ПЕЧАТИ (БЕЗ ТАЙМЕРОВ!)
+        // === ИДЕАЛЬНАЯ ПЕЧАТЬ БЕЗ ПУСТЫХ ЛИСТОВ (Используем микро-таймер) ===
         function printTasks() {
             document.body.classList.remove('manager-report-mode');
             document.body.classList.add('task-print-mode');
-            window.print();
+            // Даем браузеру 100мс на отрисовку сетки
+            setTimeout(() => { window.print(); }, 100);
         }
 
         function printManagerReport() {
             document.body.classList.remove('task-print-mode');
             document.body.classList.add('manager-report-mode');
             document.getElementById('printTitleManager').innerText = `דוח מנהל (תקלות פתוחות) - צוות ${currentTab}`;
-            window.print();
+            setTimeout(() => { window.print(); }, 100);
         }
+
+        // Возвращаем экран в обычный режим после закрытия окна печати
+        window.addEventListener('afterprint', () => {
+            document.body.classList.remove('task-print-mode');
+            document.body.classList.remove('manager-report-mode');
+        });
     </script>
 </body>
 </html>
