@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HCL - לוח בקרה</title>
+    <title>HCL Admin - לוח בקרה</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1f2937">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="HCL Admin">
     <link rel="apple-touch-icon" href="admin-192.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,19 +19,14 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* === ЭКРАННЫЙ РЕЖИМ === */
-        @media screen {
-            .print-only { display: none !important; }
-        }
+        @media screen { .print-only { display: none !important; } }
 
-        /* === ИДЕАЛЬНАЯ ПЕЧАТЬ А4 (С ФОТО КАК НА ТЕЛЕФОНЕ) === */
+        /* === ИДЕАЛЬНАЯ ПЕЧАТЬ А4 (СЕТКА 2x2) === */
         @media print {
             @page { size: A4 portrait; margin: 5mm; }
             body { background: white; margin: 0; padding: 0 !important; -webkit-print-color-adjust: exact; }
-            
             .no-print { display: none !important; }
             
-            /* --- РЕЖИМ 1: ПЕЧАТЬ ЗАДАНИЙ (4 КВАДРАТА 2x2) --- */
             body.task-print-mode .manager-stuff { display: none !important; }
             body.task-print-mode .task-stuff { display: block !important; }
 
@@ -53,7 +47,6 @@
                 padding-bottom: 5px;
                 margin-bottom: 10px;
                 height: 30px;
-                overflow: hidden;
             }
             .print-cards-grid {
                 display: flex;
@@ -86,67 +79,38 @@
                 display: flex;
                 gap: 15px; 
                 flex-grow: 1;
-                overflow: hidden;
                 align-items: flex-start;
             }
-            
-            /* ВЕРТИКАЛЬНОЕ ФОТО (~2/3 ШИРИНЫ) */
-            .print-photo, .print-photo-placeholder {
+            .print-photo {
                 width: 60%; 
                 height: 280px; 
-                flex-shrink: 0;
                 object-fit: cover;
                 border: 2px solid #cbd5e1;
                 border-radius: 8px;
             }
             .print-photo-placeholder {
-                background: #f8fafc;
+                width: 60%;
+                height: 280px;
+                background: #f1f5f9;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                border-radius: 8px;
                 color: #94a3b8;
                 font-weight: bold;
-                font-size: 14px;
-                text-align: center;
             }
-            
-            /* ТЕКСТ ПОЛОМКИ (Остаток ширины) */
-            .print-info {
-                width: 40%; 
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-            }
-            .defect-title {
-                font-size: 20px;
-                font-weight: 900;
-                line-height: 1.2;
-                margin-bottom: 8px;
-            }
-            .defect-comment {
-                font-size: 15px;
-                line-height: 1.3;
-                color: #374151;
-            }
+            .print-info { width: 40%; display: flex; flex-direction: column; }
+            .defect-title { font-size: 20px; font-weight: 900; margin-bottom: 8px; }
+            .defect-comment { font-size: 15px; color: #374151; }
+            .signature-box { border-top: 2px dashed #000; margin-top: auto; padding-top: 5px; display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; }
 
-            .signature-box {
-                border-top: 2px dashed #000;
-                margin-top: auto;
-                padding-top: 5px;
-                display: flex;
-                justify-content: space-between;
-                font-size: 13px;
-                font-weight: bold;
-            }
-
-            /* --- РЕЖИМ 2: ПЕЧАТЬ ТАБЛИЦЫ РУКОВОДИТЕЛЯ --- */
+            /* РЕЖИМ МЕНЕДЖЕРА */
             body.manager-report-mode .task-stuff { display: none !important; }
-            body.manager-report-mode div.manager-stuff { display: block !important; }
-            body.manager-report-mode table.manager-stuff { display: table !important; width: 100%; border-collapse: collapse; margin-top: 10mm;}
-            
-            body.manager-report-mode table th, body.manager-report-mode table td { border: 1px solid #000; padding: 8px; text-align: right; }
-            body.manager-report-mode table th { background-color: #e5e7eb; font-weight: bold; font-size: 15px;}
-            #printTitleManager { font-size: 24px; font-weight: bold; text-align: center; text-decoration: underline; margin-top: 10mm; margin-bottom: 10mm;}
+            body.manager-report-mode .manager-stuff { display: block !important; }
+            body.manager-report-mode table { display: table !important; width: 100%; border-collapse: collapse; margin-top: 10mm; }
+            body.manager-report-mode th, body.manager-report-mode td { border: 1px solid #000; padding: 8px; text-align: right; }
+            body.manager-report-mode th { background: #f3f4f6; }
+            #printTitleManager { font-size: 24px; font-weight: bold; text-align: center; text-decoration: underline; margin-top: 10mm; margin-bottom: 10mm; }
         }
     </style>
 </head>
@@ -156,7 +120,7 @@
         <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center">
             <i class="fas fa-lock text-indigo-600 text-5xl mb-4"></i>
             <h2 class="text-2xl font-black mb-6">כניסת מנהל</h2>
-            <input type="password" id="pinCode" placeholder="קוד גישה" class="w-full p-4 mb-4 bg-gray-50 border rounded-xl text-center text-2xl font-bold tracking-widest focus:ring-2 focus:ring-indigo-500 outline-none">
+            <input type="password" id="pinCode" placeholder="קוד גישה" class="w-full p-4 mb-4 bg-gray-50 border rounded-xl text-center text-2xl font-bold tracking-widest outline-none focus:ring-2 focus:ring-indigo-500">
             <button onclick="checkPin()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg">כניסה</button>
             <p id="pinError" class="text-red-500 font-bold mt-2 hidden">קוד שגוי!</p>
         </div>
@@ -186,41 +150,34 @@
                     </select>
                 </div>
                 <div class="flex-1">
-                    <label class="block text-sm font-bold text-gray-500 mb-1">מתאריך (החל מ)</label>
+                    <label class="block text-sm font-bold text-gray-500 mb-1">מתאריך</label>
                     <input type="date" id="filterDate" onchange="renderTasks()" class="w-full p-3 bg-gray-50 border rounded-xl font-bold outline-none">
                 </div>
                 <div class="flex items-end">
-                    <button onclick="resetFilters()" class="w-full md:w-auto px-6 py-3 bg-red-100 text-red-600 rounded-xl font-bold hover:bg-red-200">נקה סינון</button>
+                    <button onclick="resetFilters()" class="px-6 py-3 bg-red-100 text-red-600 rounded-xl font-bold">נקה סינון</button>
                 </div>
             </div>
         </div>
 
         <div class="flex bg-white rounded-2xl shadow-sm mb-6 overflow-hidden no-print flex-wrap md:flex-nowrap">
-            <button onclick="switchTab('חשמל')" id="tab-חשמל" class="tab-btn active flex-1 py-4 px-2 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-bolt text-yellow-500 ml-2"></i>חשמל</button>
-            <button onclick="switchTab('בינוי_ודלתות')" id="tab-בינוי_ודלתות" class="tab-btn flex-1 py-4 px-2 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-hammer text-orange-500 ml-2"></i>בינוי ודלתות</button>
-            <button onclick="switchTab('מיטות')" id="tab-מיטות" class="tab-btn flex-1 py-4 px-2 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-bed text-purple-500 ml-2"></i>מיטות</button>
-            <button onclick="switchTab('ליקויים')" id="tab-ליקויים" class="tab-btn flex-1 py-4 px-2 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"><i class="fas fa-clipboard-list text-blue-500 ml-2"></i>ליקויים (כללי)</button>
+            <button onclick="switchTab('חשמל')" id="tab-חשמל" class="tab-btn active flex-1 py-4 px-2 font-bold text-gray-500">חשמל</button>
+            <button onclick="switchTab('בינוי_ודלתות')" id="tab-בינוי_ודלתות" class="tab-btn flex-1 py-4 px-2 font-bold text-gray-500">בינוי</button>
+            <button onclick="switchTab('מיטות')" id="tab-מיטות" class="tab-btn flex-1 py-4 px-2 font-bold text-gray-500">מיטות</button>
+            <button onclick="switchTab('ליקויים')" id="tab-ליקויים" class="tab-btn flex-1 py-4 px-2 font-bold text-gray-500">כללי</button>
         </div>
 
         <div class="print-only manager-stuff" id="printTitleManager"></div>
         <table id="managerTable" class="print-only manager-stuff">
             <thead>
                 <tr>
-                    <th>תאריך פתיחה</th>
-                    <th>מחלקה</th>
-                    <th>חדר</th>
-                    <th>מהות הליקוי</th>
-                    <th>פעולה נדרשת</th>
-                    <th>אישור ביצוע / הערות</th>
+                    <th>תאריך</th><th>מחלקה</th><th>חדר</th><th>ליקוי</th><th>פעולה</th><th>אישור ביצוע</th>
                 </tr>
             </thead>
             <tbody id="managerTableBody"></tbody>
         </table>
 
         <div id="screenTasksContainer" class="space-y-4 no-print"></div>
-
         <div id="printTasksContainer" class="print-only task-stuff"></div>
-
     </div>
 
     <script>
@@ -236,26 +193,16 @@
             } else { document.getElementById('pinError').classList.remove('hidden'); }
         }
 
-        // === ИДЕАЛЬНОЕ И РАБОЧЕЕ РЕШЕНИЕ ДЛЯ КАРТИНОК GOOGLE DRIVE ===
+        // КАРТИНКИ: ИСПОЛЬЗУЕМ ПРЯМОЙ CDN GOOGLE (САМЫЙ НАДЕЖНЫЙ)
         function fixImageUrl(url) {
             if(!url) return "";
-            let fileId = "";
-            if (url.includes('id=')) {
-                fileId = url.split('id=')[1].split('&')[0];
-            } else if (url.includes('/d/')) {
-                fileId = url.split('/d/')[1].split('/')[0];
-            }
-            if (fileId) {
-                // Прямой экспорт файла. Заставляет Google отдавать сырую картинку немедленно!
-                return `https://drive.google.com/uc?export=download&id=${fileId}`;
-            }
-            return url;
+            let id = "";
+            if(url.includes('id=')) id = url.split('id=')[1].split('&')[0];
+            else if(url.includes('/d/')) id = url.split('/d/')[1].split('/')[0];
+            return id ? `https://lh3.googleusercontent.com/d/${id}` : url;
         }
 
-        function escapeString(str) {
-            if (!str) return "";
-            return String(str).replace(/\\/g, "\\\\").replace(/"/g, "&quot;").replace(/'/g, "\\'");
-        }
+        function escapeStr(str) { return String(str || "").replace(/'/g, "\\'").replace(/"/g, "&quot;"); }
 
         async function loadTasks() {
             document.getElementById('loader').classList.remove('hidden');
@@ -263,204 +210,103 @@
                 const res = await fetch(`${API_URL}?action=getOpenTasks`);
                 const data = await res.json();
                 allTasks = data.tasks || [];
-                
                 const depts = [...new Set(allTasks.map(t => t.dept))].filter(Boolean);
-                const select = document.getElementById('filterDept');
-                select.innerHTML = '<option value="ALL">כל המחלקות</option>';
-                depts.forEach(d => select.innerHTML += `<option value="${d}">${d}</option>`);
-
+                const sel = document.getElementById('filterDept');
+                sel.innerHTML = '<option value="ALL">כל המחלקות</option>';
+                depts.forEach(d => sel.innerHTML += `<option value="${d}">${d}</option>`);
                 renderTasks();
-            } catch(e) { alert("שגיאה בטעינת נתונים!"); }
+            } catch(e) { alert("שגיאה בטעינה!"); }
             document.getElementById('loader').classList.add('hidden');
         }
 
-        function switchTab(tabName) {
-            currentTab = tabName;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'bg-white'));
-            document.getElementById('tab-' + tabName).classList.add('active', 'bg-white');
-            renderTasks();
-        }
-
-        function resetFilters() {
-            document.getElementById('filterDept').value = "ALL";
-            document.getElementById('filterDate').value = "";
-            renderTasks();
-        }
+        function switchTab(t) { currentTab = t; document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'bg-white')); document.getElementById('tab-'+t).classList.add('active', 'bg-white'); renderTasks(); }
+        function resetFilters() { document.getElementById('filterDept').value="ALL"; document.getElementById('filterDate').value=""; renderTasks(); }
 
         function renderTasks() {
-            const screenContainer = document.getElementById('screenTasksContainer');
-            const printContainer = document.getElementById('printTasksContainer');
+            const screen = document.getElementById('screenTasksContainer');
+            const print = document.getElementById('printTasksContainer');
             const tbody = document.getElementById('managerTableBody');
+            screen.innerHTML = ''; print.innerHTML = ''; tbody.innerHTML = '';
             
-            screenContainer.innerHTML = '';
-            printContainer.innerHTML = '';
-            tbody.innerHTML = '';
-            
-            const filterDept = document.getElementById('filterDept').value;
-            const filterDate = document.getElementById('filterDate').value;
+            const fDept = document.getElementById('filterDept').value;
+            const fDate = document.getElementById('filterDate').value;
 
             let filtered = allTasks.filter(t => t.sheet === currentTab);
-            if(filterDept !== "ALL") { filtered = filtered.filter(t => t.dept === filterDept); }
-            if(filterDate) {
-                const selectedDate = new Date(filterDate);
+            if(fDept !== "ALL") filtered = filtered.filter(t => t.dept === fDept);
+            if(fDate) {
+                const selD = new Date(fDate);
                 filtered = filtered.filter(t => {
-                    const parts = t.dateStr.split(" ")[0].split("/"); 
-                    if(parts.length === 3) {
-                        const taskDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-                        return taskDate >= selectedDate;
-                    }
-                    return true;
+                    const p = t.dateStr.split(" ")[0].split("/");
+                    return new Date(`${p[2]}-${p[1]}-${p[0]}`) >= selD;
                 });
             }
             
-            if(filtered.length === 0) {
-                screenContainer.innerHTML = '<div class="text-center p-10 text-gray-400 font-bold bg-white rounded-2xl"><i class="fas fa-check-circle text-5xl mb-4"></i><p>אין משימות פתוחות לסינון זה!</p></div>';
-                return;
-            }
+            if(filtered.length === 0) { screen.innerHTML = '<p class="text-center p-10 text-gray-400">אין משימות</p>'; return; }
 
-            let groupsForPrint = {};
-            
-            filtered.forEach((task, index) => {
-                const actionColor = task.actionType == 1 ? "text-red-600 bg-red-100" : "text-orange-600 bg-orange-100";
-                const actionText = task.actionType == 1 ? "החלפה" : "תיקון";
-                const cleanPic = fixImageUrl(task.photo);
-                const displayDate = task.dateStr.split(" ")[0]; 
-                
-                const safeSheet = escapeString(task.sheet);
-                const safeDateStr = escapeString(task.dateStr);
-                const safeRoom = escapeString(task.room);
-                const safeDefect = escapeString(task.defect);
+            let groups = {};
+            filtered.forEach((task, idx) => {
+                const actT = task.actionType == 1 ? "החלפה" : "תיקון";
+                const img = fixImageUrl(task.photo);
+                const dDate = task.dateStr.split(" ")[0];
 
-                // 1. ОТРИСОВКА НА ЭКРАНЕ (Список)
-                const screenPhotoHtml = cleanPic ? `<a href="${cleanPic}" target="_blank"><img src="${cleanPic}" class="w-24 h-24 object-cover rounded-xl border"></a>` : `<div class="w-24 h-24 bg-gray-100 rounded-xl border flex items-center justify-center text-gray-400"><i class="fas fa-image text-2xl"></i></div>`;
-                screenContainer.innerHTML += `
-                <div class="task-card bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-5">
-                    <div class="flex-shrink-0 flex justify-center">${screenPhotoHtml}</div>
+                // ЭКРАН
+                screen.innerHTML += `
+                <div class="bg-white p-5 rounded-2xl shadow-sm border flex flex-col md:flex-row gap-5 mb-4" id="task-card-${idx}">
+                    <img src="${img}" class="w-24 h-24 object-cover rounded-xl border" onerror="this.src='https://placehold.co/100x100?text=No+Photo'">
                     <div class="flex-grow">
-                        <div class="flex justify-between items-start mb-2 border-b pb-2">
-                            <h3 class="text-xl font-black text-gray-800">${task.dept} <span class="text-gray-400 mx-2">|</span> חדר: <span class="text-indigo-600">${task.room}</span></h3>
-                            <span class="px-3 py-1 rounded-lg font-bold text-sm ${actionColor}">${actionText}</span>
-                        </div>
-                        <p class="font-bold text-lg mb-1"><i class="fas fa-wrench text-gray-400 ml-2"></i>${task.defect}</p>
-                        ${task.comment ? `<p class="text-gray-600 mb-2"><i class="fas fa-comment-alt text-gray-400 ml-2"></i>${task.comment}</p>` : ''}
-                        <p class="text-xs text-gray-400 mt-2"><i class="fas fa-calendar-alt ml-1"></i> נפתח: ${displayDate}</p>
+                        <h3 class="text-xl font-bold">${task.dept} | חדר: ${task.room} <span class="text-sm font-normal px-2 bg-gray-100 rounded">${actT}</span></h3>
+                        <p class="font-bold mt-1">${task.defect}</p>
+                        <p class="text-gray-500 text-sm">${task.comment || ""}</p>
                     </div>
-                    <div class="flex items-center justify-center min-w-[140px]">
-                        <button id="btn-${index}" onclick="closeTask('${safeSheet}', '${safeDateStr}', '${safeRoom}', '${safeDefect}', ${index})" class="w-full bg-green-50 text-green-600 border-2 border-green-500 py-3 rounded-xl font-bold hover:bg-green-500 hover:text-white transition-colors flex justify-center items-center gap-2">
-                            <i class="fas fa-check"></i> סיום טיפול
-                        </button>
-                    </div>
+                    <button id="btn-${idx}" onclick="closeTask('${escapeStr(task.sheet)}','${task.dateStr}','${task.room}','${escapeStr(task.defect)}', ${idx})" class="bg-green-50 text-green-600 border-2 border-green-500 px-6 py-3 rounded-xl font-bold">בוצע</button>
                 </div>`;
 
-                // 2. ОТРИСОВКА В ТАБЛИЦУ РУКОВОДИТЕЛЯ
-                tbody.innerHTML += `
-                <tr>
-                    <td>${displayDate}</td>
-                    <td class="font-bold">${task.dept}</td>
-                    <td>${task.room}</td>
-                    <td>${task.defect}</td>
-                    <td class="${task.actionType == 1 ? 'text-red-600' : 'text-orange-600'} font-bold">${actionText}</td>
-                    <td class="w-40"></td>
-                </tr>`;
+                // ТАБЛИЦА
+                tbody.innerHTML += `<tr><td>${dDate}</td><td>${task.dept}</td><td>${task.room}</td><td>${task.defect}</td><td>${actT}</td><td></td></tr>`;
 
-                // 3. СБОР ДАННЫХ ДЛЯ ПЕЧАТИ КАРТОЧЕК
-                let groupKey = `${task.dept}|${displayDate}`;
-                if(!groupsForPrint[groupKey]) groupsForPrint[groupKey] = [];
-                groupsForPrint[groupKey].push({...task, actionText, cleanPic});
+                // ПЕЧАТЬ
+                let key = `${task.dept}|${dDate}`;
+                if(!groups[key]) groups[key] = [];
+                groups[key].push({...task, actT, img});
             });
 
-            // 4. ГЕНЕРАЦИЯ ЛИСТОВ А4 (Сетка 2x2)
-            for(let key in groupsForPrint) {
-                let groupTasks = groupsForPrint[key];
-                let dept = groupTasks[0].dept;
-                let date = groupTasks[0].dateStr.split(" ")[0];
-
-                for(let i=0; i < groupTasks.length; i+=4) {
-                    let chunk = groupTasks.slice(i, i+4);
-                    
-                    let pageHtml = `
-                    <div class="print-page">
-                        <div class="print-page-header">צוות: ${currentTab} | מחלקה: ${dept} | תאריך בדיקה: ${date}</div>
-                        <div class="print-cards-grid">
-                    `;
-                    
-                    chunk.forEach(task => {
-                        const photoHtml = task.cleanPic ? `<img src="${task.cleanPic}" class="print-photo">` : `<div class="print-photo-placeholder">אין תמונה</div>`;
-                        pageHtml += `
-                        <div class="print-card">
-                            <div class="print-card-top">
-                                <span class="font-black text-xl">חדר: ${task.room}</span>
-                                <span class="font-bold text-lg px-3 py-1 border-2 border-gray-800 rounded-lg bg-gray-100">${task.actionText}</span>
-                            </div>
+            for(let key in groups) {
+                let g = groups[key];
+                for(let i=0; i<g.length; i+=4) {
+                    let chunk = g.slice(i, i+4);
+                    let page = `<div class="print-page"><div class="print-page-header">צוות: ${currentTab} | מחלקה: ${g[0].dept} | תאריך: ${g[0].dateStr.split(" ")[0]}</div><div class="print-cards-grid">`;
+                    chunk.forEach(t => {
+                        page += `<div class="print-card">
+                            <div class="print-card-top"><span class="font-black text-xl">חדר: ${t.room}</span><span class="px-2 border rounded">${t.actT}</span></div>
                             <div class="print-card-body">
-                                ${photoHtml}
-                                <div class="print-info">
-                                    <p class="defect-title">${task.defect}</p>
-                                    ${task.comment ? `<p class="defect-comment">${task.comment}</p>` : ''}
-                                </div>
+                                <img src="${t.img}" class="print-photo" onerror="this.style.display='none'">
+                                <div class="print-info"><p class="defect-title">${t.defect}</p><p class="defect-comment">${t.comment || ""}</p></div>
                             </div>
-                            <div class="signature-box">
-                                <span>שם: ____________</span>
-                                <span>תאריך: ____________</span>
-                                <span>חתימה: ____________</span>
-                            </div>
+                            <div class="signature-box"><span>שם: _________</span><span>תאריך: _________</span><span>חתימה: _________</span></div>
                         </div>`;
                     });
-                    
-                    pageHtml += `</div></div>`;
-                    printContainer.innerHTML += pageHtml;
+                    print.innerHTML += page + `</div></div>`;
                 }
             }
         }
 
-        async function closeTask(sheet, dateStr, room, defect, index) {
-            if(!confirm("לסגור משימה זו ולהעביר לסטטוס 'סגור'?")) return;
-            
-            const btn = document.getElementById(`btn-${index}`);
-            const originalHtml = btn.innerHTML;
-            
-            btn.innerHTML = '<i class="fas fa-lock"></i> נסגר';
-            btn.className = "w-full bg-gray-200 text-gray-500 border-2 border-gray-200 py-3 rounded-xl font-bold cursor-not-allowed flex justify-center items-center gap-2";
-            btn.disabled = true;
-            document.getElementById(`btn-${index}`).closest('.task-card').classList.add('opacity-50');
-            
+        async function closeTask(sh, dt, rm, df, idx) {
+            if(!confirm("לסגור?")) return;
+            const b = document.getElementById(`btn-${idx}`);
+            b.innerHTML = "נסגר..."; b.disabled = true;
             try {
-                const res = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: "CLOSE_TASK", sheetName: sheet, date: dateStr, room: room, defect: defect })
-                });
-                
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: "CLOSE_TASK", sheetName: sh, date: dt, room: rm, defect: df }) });
                 const out = await res.json();
                 if(out.status === "success") {
-                    allTasks = allTasks.filter(t => !(t.sheet === sheet && t.dateStr === dateStr && t.room == room && t.defect === defect));
-                } else { throw new Error(); }
-            } catch(e) { 
-                alert("שגיאת תקשורת! לא נשמר."); 
-                btn.innerHTML = originalHtml;
-                btn.className = "w-full bg-green-50 text-green-600 border-2 border-green-500 py-3 rounded-xl font-bold hover:bg-green-500 hover:text-white transition-colors flex justify-center items-center gap-2";
-                btn.disabled = false;
-                document.getElementById(`btn-${index}`).closest('.task-card').classList.remove('opacity-50');
-            }
+                    document.getElementById(`task-card-${idx}`).style.opacity="0.3";
+                    b.innerHTML = "סגור ✅";
+                }
+            } catch(e) { alert("שגיאה!"); b.disabled = false; b.innerHTML = "בוצע"; }
         }
 
-        // БЕЗОПАСНЫЙ ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМОВ ПЕЧАТИ
-        function printTasks() {
-            document.body.classList.remove('manager-report-mode');
-            document.body.classList.add('task-print-mode');
-            setTimeout(() => { window.print(); }, 100);
-        }
-
-        function printManagerReport() {
-            document.body.classList.remove('task-print-mode');
-            document.body.classList.add('manager-report-mode');
-            document.getElementById('printTitleManager').innerText = `דוח מנהל (תקלות פתוחות) - צוות ${currentTab}`;
-            setTimeout(() => { window.print(); }, 100);
-        }
-
-        window.addEventListener('afterprint', () => {
-            document.body.classList.remove('task-print-mode');
-            document.body.classList.remove('manager-report-mode');
-        });
+        function printTasks() { document.body.classList.remove('manager-report-mode'); document.body.classList.add('task-print-mode'); setTimeout(() => { window.print(); }, 200); }
+        function printManagerReport() { document.body.classList.remove('task-print-mode'); document.body.classList.add('manager-report-mode'); document.getElementById('printTitleManager').innerText = `דוח מנהל - ${currentTab}`; setTimeout(() => { window.print(); }, 200); }
+        window.addEventListener('afterprint', () => { document.body.classList.remove('task-print-mode','manager-report-mode'); });
     </script>
 </body>
 </html>
