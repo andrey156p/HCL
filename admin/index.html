@@ -25,8 +25,10 @@
             @page { size: A4 portrait; margin: 5mm; }
             body { background: white; margin: 0; padding: 0 !important; -webkit-print-color-adjust: exact; }
             .no-print { display: none !important; }
+            
             #managerTable, #printTitleManager, #printTasksContainer { display: none !important; }
             body.task-print-mode #printTasksContainer { display: block !important; }
+
             .print-page { width: 100%; height: 282mm; page-break-after: always; box-sizing: border-box; padding: 5mm; display: flex; flex-direction: column; }
             .print-page-header { font-size: 19px; font-weight: bold; text-align: center; border-bottom: 3px solid #000; padding-bottom: 5px; margin-bottom: 10px; height: 30px; }
             .print-cards-grid { display: flex; flex-wrap: wrap; justify-content: space-between; align-content: space-between; height: calc(100% - 40px); }
@@ -38,8 +40,11 @@
             .defect-title { font-size: 20px; font-weight: 900; margin-bottom: 8px; }
             .defect-comment { font-size: 15px; color: #374151; }
             .signature-box { border-top: 2px dashed #000; margin-top: auto; padding-top: 5px; display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; }
+
             body.manager-report-mode #managerTable { display: table !important; width: 100%; border-collapse: collapse; margin-top: 10mm; }
+            body.manager-report-mode #printTitleManager { display: block !important; font-size: 24px; font-weight: bold; text-align: center; text-decoration: underline; margin-top: 10mm; margin-bottom: 10mm; }
             body.manager-report-mode th, body.manager-report-mode td { border: 1px solid #000; padding: 8px; text-align: right; }
+            body.manager-report-mode th { background: #f3f4f6; font-size: 15px; }
         }
     </style>
 </head>
@@ -114,23 +119,21 @@
         let currentTab = "חשמל";
 
         function checkPin() {
-            const pin = document.getElementById('pinCode').value;
-            if(pin === "1234") { 
+            if(document.getElementById('pinCode').value === "1234") { 
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
                 loadTasks();
-            } else { 
-                document.getElementById('pinError').classList.remove('hidden'); 
-            }
+            } else { document.getElementById('pinError').classList.remove('hidden'); }
         }
 
+        // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ КАРТИНОК ---
         function fixImageUrl(url) {
             if(!url) return "";
             let id = "";
             if(url.includes('id=')) id = url.split('id=')[1].split('&')[0];
             else if(url.includes('/d/')) id = url.split('/d/')[1].split('/')[0];
-            // Возвращаем старый, надежный способ через миниатюры (thumbnail)
-            return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w800` : url;
+            // Надежная ссылка Google Drive
+            return id ? `https://drive.google.com/uc?id=${id}` : url;
         }
 
         function escapeStr(str) { return String(str || "").replace(/'/g, "\\'").replace(/"/g, "&quot;"); }
@@ -146,7 +149,7 @@
                 sel.innerHTML = '<option value="ALL">כל המחלקות</option>';
                 depts.forEach(d => sel.innerHTML += `<option value="${d}">${d}</option>`);
                 renderTasks();
-            } catch(e) { console.error(e); }
+            } catch(e) { console.error("Ошибка загрузки:", e); }
             document.getElementById('loader').classList.add('hidden');
         }
 
@@ -183,7 +186,7 @@
             }
             
             if(filtered.length === 0) { 
-                screen.innerHTML = '<p class="text-center p-10 text-gray-400 font-bold">אין משימות פתוחות</p>'; 
+                screen.innerHTML = '<p class="text-center p-10 text-gray-400 font-bold">אין משימות (Нет заданий)</p>'; 
                 return; 
             }
 
@@ -227,7 +230,7 @@
                     let page = `<div class="print-page"><div class="print-page-header">צוות: ${currentTab} | מחלקה: ${g[0].dept} | תאריך: ${g[0].dateStr.split(" ")[0]}</div><div class="print-cards-grid">`;
                     chunk.forEach(t => {
                         page += `<div class="print-card">
-                            <div class="print-card-top"><span class="font-black text-xl">חדр: ${t.room}</span><span class="px-2 border rounded">${t.actT}</span></div>
+                            <div class="print-card-top"><span class="font-black text-xl">חדר: ${t.room}</span><span class="px-2 border rounded">${t.actT}</span></div>
                             <div class="print-card-body">
                                 <img src="${t.img}" class="print-photo" onerror="this.style.display='none'">
                                 <div class="print-info"><p class="defect-title">${t.defect}</p><p class="defect-comment">${t.comment || ""}</p></div>
@@ -261,6 +264,7 @@
             const checkboxes = document.querySelectorAll('.task-checkbox:checked:not(:disabled)');
             if(checkboxes.length === 0) { alert("בחר לפחות משימה אחת!"); return; }
             if(!confirm(`לסגור ${checkboxes.length} משימות?`)) return;
+            
             document.getElementById('loader').classList.remove('hidden');
             for(let cb of checkboxes) {
                 const idx = cb.dataset.index;
