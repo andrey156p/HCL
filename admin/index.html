@@ -126,14 +126,15 @@
             } else { document.getElementById('pinError').classList.remove('hidden'); }
         }
 
-        // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ КАРТИНОК ---
+        // --- ОБНОВЛЕННАЯ ФУНКЦИЯ ДЛЯ КАРТИНОК (Thumbnail API) ---
         function fixImageUrl(url) {
             if(!url) return "";
             let id = "";
             if(url.includes('id=')) id = url.split('id=')[1].split('&')[0];
             else if(url.includes('/d/')) id = url.split('/d/')[1].split('/')[0];
-            // Надежная ссылка Google Drive
-            return id ? `https://drive.google.com/uc?id=${id}` : url;
+            
+            // Используем Thumbnail API для обхода блокировок: sz=w1000 задает хорошее разрешение
+            return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1000` : url;
         }
 
         function escapeStr(str) { return String(str || "").replace(/'/g, "\\'").replace(/"/g, "&quot;"); }
