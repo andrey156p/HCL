@@ -1,8 +1,10 @@
 {
+  "id": "/HCL/inspector/",
   "name": "Инспектор Больничных Систем",
   "short_name": "Инспектор",
   "description": "Система контроля и проверки больничных отделений",
-  "start_url": "/HCL/",
+  "start_url": "/HCL/index.html",
+  "scope": "/HCL/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4f46e5",
